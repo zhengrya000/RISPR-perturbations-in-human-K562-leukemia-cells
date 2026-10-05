@@ -16,8 +16,10 @@ export function createConstellationMotion(root: Object3D, nodes: { x: number; y:
   return {
     update(pointer: { x: number; y: number }, entered: boolean, reducedMotion: boolean, delta: number) {
       const ease = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 60) / 180);
-      x += ((entered || reducedMotion ? 0 : pointer.x) - x) * ease;
-      y += ((entered || reducedMotion ? 0 : pointer.y) - y) * ease;
+      if (reducedMotion) { x = y = 0; }
+      else if (!entered) { x += (pointer.x - x) * ease; y += (pointer.y - y) * ease; }
+      // Hold the intro pose on entry; recentering it during the camera flight
+      // would look like a sideways slide even when the camera moves only in Z.
       const unitsPerPixel = introDistance * 2 * Math.tan(Math.PI / 8) / Math.max(1, height);
       root.position.copy(origin);
       root.position.x += x * 36 * unitsPerPixel;
@@ -35,6 +37,7 @@ export function createConstellationMotion(root: Object3D, nodes: { x: number; y:
       ray.copy(raycaster.ray).applyMatrix4(inverse);
       return ray.intersectsBox(bounds);
     },
+    reset() { x = y = 0; },
     dispose() {
       root.position.copy(origin);
       root.rotation.copy(rotation);

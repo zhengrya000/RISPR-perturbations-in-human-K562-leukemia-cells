@@ -36,9 +36,9 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredPair, setHoveredPair] = useState<string | null>(null);
   const [fontsReady, setFontsReady] = useState(false);
-  const atmosphereState = useRef({ entered, reducedMotion, mode, interactive });
+  const atmosphereState = useRef({ entered, reducedMotion, mode, interactive, resetNonce });
   const palette = palettes[mode];
-  useEffect(() => { atmosphereState.current = { entered, reducedMotion, mode, interactive }; }, [entered, reducedMotion, mode, interactive]);
+  useEffect(() => { atmosphereState.current = { entered, reducedMotion, mode, interactive, resetNonce }; }, [entered, reducedMotion, mode, interactive, resetNonce]);
 
   useEffect(() => { let mounted = true; document.fonts.ready.then(() => { if (mounted) setFontsReady(true); }); return () => { mounted = false; }; }, []);
 
@@ -55,6 +55,10 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     nodes: constellationLayout(data.nodes, data.pairs),
     links: data.pairs.map((pair) => ({ ...pair, source: pair.genes[0], target: pair.genes[1] })),
   }), [data]);
+  const center = useMemo(() => Object.fromEntries(["x", "y", "z"].map((axis) => {
+    const coordinates = graphData.nodes.map((node) => node[axis as "x" | "y" | "z"]);
+    return [axis, (Math.min(...coordinates) + Math.max(...coordinates)) / 2];
+  })) as { x: number; y: number; z: number }, [graphData]);
   const partners = useMemo(() => {
     const result = new Set<string>();
     if (selectedGenes.length === 1) data.pairs.filter((pair) => pair.genes.includes(selectedGenes[0])).forEach((pair) => pair.genes.forEach((gene) => result.add(gene)));
@@ -62,7 +66,11 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   }, [data, selectedGenes]);
 
   const mobile = size.width < 760;
-  const usableWidth = mobile ? Math.max(180, size.width - 70) : Math.max(300, size.width - 430);
+  const compactLabels = size.width < 1280;
+  // Fit a centered graph beside the unframed results, keeping the camera on
+  // the same horizontal axis in both phases rather than sliding it to the left.
+  const resultSpace = size.width <= 1100 ? 330 + 24 + 32 : 380 + 36 + 32;
+  const usableWidth = mobile ? Math.max(180, size.width - 70) : Math.max(220, size.width - resultSpace * 2);
   const usableHeight = mobile
     ? Math.max(160, size.height * (selectedGenes.length || contextOpen ? 0.57 : 0.79) - 265)
     : Math.max(250, size.height - 230);
@@ -71,18 +79,12 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   const distance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * projection) + depthPadding);
   const pixelsPerUnit = Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * distance);
   const target = {
-    x: mobile ? 0 : (size.width / 2 - (usableWidth / 2 + 36)) / pixelsPerUnit,
-    y: mobile ? (114 + usableHeight / 2 - size.height / 2) / pixelsPerUnit : 0,
-    z: 0,
+    x: center.x,
+    y: center.y + (mobile ? (114 + usableHeight / 2 - size.height / 2) / pixelsPerUnit : 0),
+    z: center.z,
   };
   const introProjection = Math.min(usableWidth / 720, (mobile ? Math.max(160, size.height * 0.79 - 265) : usableHeight) / 550);
-  const introDistance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introProjection) + depthPadding) * (mobile ? 1.35 : 1.55);
-  const introPixelsPerUnit = Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introDistance);
-  const introTarget = {
-    x: mobile ? 0 : (size.width / 2 - size.width * 0.61) / introPixelsPerUnit,
-    y: (size.height * (mobile ? 0.65 : 0.56) - size.height / 2) / introPixelsPerUnit,
-    z: 0,
-  };
+  const introDistance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introProjection) + depthPadding) * (mobile ? 1.8 : 1.75);
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 64;
@@ -126,10 +128,11 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     document.documentElement.addEventListener("pointerleave", reset);
     window.addEventListener("blur", reset);
     finePointer.addEventListener("change", reset);
-    let frame = 0, previous = performance.now();
+    let frame = 0, previous = performance.now(), lastReset = initial.resetNonce;
     const animate = (now: number) => {
       const { entered: hasEntered, reducedMotion: reduced, mode: currentMode, interactive: canExplore } = atmosphereState.current;
       const camera = graph.current!.camera() as PerspectiveCamera;
+      if (lastReset !== atmosphereState.current.resetNonce) { motion?.reset(); lastReset = atmosphereState.current.resetNonce; }
       motion?.update(pointer, hasEntered, reduced, now - previous);
       const frozen = hasEntered && canExplore && (dragging || (overScene && !!motion?.contains(pointer, camera)));
       atmosphere.update(pointer, hasEntered, reduced, now - previous, camera, currentMode, frozen);
@@ -158,7 +161,7 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     const camera = graph.current.camera() as PerspectiveCamera;
     camera.fov = 45;
     camera.updateProjectionMatrix();
-    graph.current.cameraPosition({ ...introTarget, z: introDistance }, introTarget, 0);
+    graph.current.cameraPosition({ ...target, z: target.z + introDistance }, target, 0);
     const controls = graph.current.controls() as OrbitControls;
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -167,7 +170,7 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     controls.autoRotate = false;
     setReady(true);
     onReady();
-  }, [onReady, introDistance, introTarget.x, introTarget.y]);
+  }, [onReady, introDistance, target.x, target.y, target.z]);
 
   useEffect(() => {
     if (!ready || !graph.current) return;
@@ -176,13 +179,15 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     // events keep the scene untouchable until the entry transition completes.
     const controls = graph.current.controls() as OrbitControls;
     controls.enabled = true;
+    // Entry changes only Z. Both camera endpoints and OrbitControls share one
+    // target, so entering the centered constellation has no lateral travel.
     graph.current.cameraPosition(
-      entered ? { x: target.x, y: target.y, z: distance } : { ...introTarget, z: introDistance },
-      entered ? target : introTarget,
+      { ...target, z: target.z + (entered ? distance : introDistance) },
+      target,
       reducedMotion ? 0 : travel ? 1600 : entered ? 650 : arrived.current ? 1100 : 0,
     );
     arrived.current = entered;
-  }, [entered, ready, reducedMotion, size.width, size.height, distance, introDistance, resetNonce]); // Mobile framing reserves room for the continuous results area.
+  }, [entered, ready, reducedMotion, size.width, size.height, distance, introDistance, target.x, target.y, target.z, resetNonce]); // Mobile framing reserves room for the continuous results area.
 
   const nodeObject = useCallback((node: SceneNode) => {
     const selected = selectedGenes.includes(node.id);
@@ -191,12 +196,12 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     const dimmed = entered && selectedGenes.length === 1 && !related && !focused;
     const color = focused ? palette.focus : entered && related ? palette.partner : palette.node;
     const group = new Group();
-    const radius = (mobile ? 5 : 2.5) * (focused ? 1.4 : 1);
+    const radius = (compactLabels ? 5 : 2.5) * (focused ? 1.4 : 1);
     group.add(new Mesh(new SphereGeometry(radius, 12, 8), new MeshBasicMaterial({ color, transparent: true, opacity: entered ? (dimmed ? 0.28 : 0.95) : 0.65 })));
     const glow = new Sprite(new SpriteMaterial({ map: texture, color, transparent: true, opacity: focused ? 0.65 : entered ? related ? 0.20 : 0.14 : 0.10, blending: AdditiveBlending, depthWrite: false }));
     glow.scale.setScalar(radius * (focused ? 10 : entered ? 7 : 6));
     group.add(glow);
-    if (entered && (!mobile || focused || related)) {
+    if (entered && (!compactLabels || focused || related)) {
       const label = new SpriteText(node.label);
       label.color = focused ? palette.label : related ? palette.partnerLabel : dimmed ? "#48515e" : "#8b96a7";
       label.fontFace = container.current ? getComputedStyle(container.current).fontFamily : "monospace";
@@ -207,7 +212,7 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
       group.add(label);
     }
     return group;
-  }, [selectedGenes, partners, hovered, entered, mobile, distance, size.height, texture, palette, fontsReady]);
+  }, [selectedGenes, partners, hovered, entered, compactLabels, distance, size.height, texture, palette, fontsReady]);
 
   return <div ref={container} className="constellation-canvas" style={{ pointerEvents: interactive ? "auto" : "none" }} aria-label="Interactive three-dimensional map of the evaluated gene pairs">
     {size.width > 0 && <ForceGraph3D<SceneNode, PairResult>

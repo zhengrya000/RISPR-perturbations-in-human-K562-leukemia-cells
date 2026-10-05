@@ -9,6 +9,7 @@ import { constellationLayout, type SceneNode } from "@/lib/constellation-layout"
 import type { DashboardData, PairResult, ViewMode } from "@/lib/types";
 import { palettes } from "@/lib/palette";
 import { createIntroAtmosphere } from "@/lib/intro-atmosphere";
+import { createConstellationMotion, findConstellationRoot } from "@/lib/constellation-motion";
 
 interface Props {
   data: DashboardData;
@@ -35,9 +36,9 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredPair, setHoveredPair] = useState<string | null>(null);
   const [fontsReady, setFontsReady] = useState(false);
-  const atmosphereState = useRef({ entered, reducedMotion, mode });
+  const atmosphereState = useRef({ entered, reducedMotion, mode, interactive });
   const palette = palettes[mode];
-  useEffect(() => { atmosphereState.current = { entered, reducedMotion, mode }; }, [entered, reducedMotion, mode]);
+  useEffect(() => { atmosphereState.current = { entered, reducedMotion, mode, interactive }; }, [entered, reducedMotion, mode, interactive]);
 
   useEffect(() => { let mounted = true; document.fonts.ready.then(() => { if (mounted) setFontsReady(true); }); return () => { mounted = false; }; }, []);
 
@@ -99,25 +100,39 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   useEffect(() => {
     if (!ready || !graph.current) return;
     const scene = graph.current.scene();
+    const root = findConstellationRoot(scene);
+    const motion = root ? createConstellationMotion(root, graphData.nodes, size.height, introDistance) : null;
     const initial = atmosphereState.current;
-    const atmosphere = createIntroAtmosphere(texture, { ...size, distance: introDistance, target: introTarget, mobile, entered: initial.entered, mode: initial.mode });
-    atmosphere.update({ x: 0, y: 0 }, initial.entered, initial.reducedMotion, 0, graph.current.camera() as PerspectiveCamera, initial.mode);
+    const atmosphere = createIntroAtmosphere(texture, { ...size, mobile, entered: initial.entered, mode: initial.mode });
+    atmosphere.update({ x: 0, y: 0 }, initial.entered, initial.reducedMotion, 0, graph.current.camera() as PerspectiveCamera, initial.mode, false);
     scene.add(atmosphere.group);
     const pointer = { x: 0, y: 0 };
+    let overScene = false, dragging = false;
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const reset = () => { pointer.x = pointer.y = 0; overScene = dragging = false; };
     const move = (event: PointerEvent) => {
-      if (!finePointer.matches || event.pointerType !== "mouse") return;
-      pointer.x = Math.max(-1, Math.min(1, event.clientX / Math.max(1, size.width) * 2 - 1));
-      pointer.y = Math.max(-1, Math.min(1, event.clientY / Math.max(1, size.height) * 2 - 1));
+      if (!finePointer.matches || event.pointerType !== "mouse") { reset(); return; }
+      const rect = container.current!.getBoundingClientRect();
+      pointer.x = Math.max(-1, Math.min(1, (event.clientX - rect.left) / Math.max(1, rect.width) * 2 - 1));
+      pointer.y = Math.max(-1, Math.min(1, (event.clientY - rect.top) / Math.max(1, rect.height) * 2 - 1));
+      overScene = !!(event.target as Element).closest(".constellation-canvas");
     };
-    const reset = () => { pointer.x = pointer.y = 0; };
+    const down = (event: PointerEvent) => { if (atmosphereState.current.interactive && (event.target as Element).closest(".constellation-canvas")) dragging = true; };
+    const up = () => { dragging = false; };
     window.addEventListener("pointermove", move);
+    window.addEventListener("pointerdown", down, true);
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", up, true);
     document.documentElement.addEventListener("pointerleave", reset);
     window.addEventListener("blur", reset);
+    finePointer.addEventListener("change", reset);
     let frame = 0, previous = performance.now();
     const animate = (now: number) => {
-      const { entered: hasEntered, reducedMotion: reduced, mode: currentMode } = atmosphereState.current;
-      atmosphere.update(pointer, hasEntered, reduced, now - previous, graph.current!.camera() as PerspectiveCamera, currentMode);
+      const { entered: hasEntered, reducedMotion: reduced, mode: currentMode, interactive: canExplore } = atmosphereState.current;
+      const camera = graph.current!.camera() as PerspectiveCamera;
+      motion?.update(pointer, hasEntered, reduced, now - previous);
+      const frozen = hasEntered && canExplore && (dragging || (overScene && !!motion?.contains(pointer, camera)));
+      atmosphere.update(pointer, hasEntered, reduced, now - previous, camera, currentMode, frozen);
       previous = now;
       frame = requestAnimationFrame(animate);
     };
@@ -125,12 +140,17 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerdown", down, true);
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", up, true);
       document.documentElement.removeEventListener("pointerleave", reset);
       window.removeEventListener("blur", reset);
+      finePointer.removeEventListener("change", reset);
       scene.remove(atmosphere.group);
       atmosphere.dispose();
+      motion?.dispose();
     };
-  }, [ready, size.width, size.height, introDistance, introTarget.x, introTarget.y, mobile, texture]);
+  }, [ready, size.width, size.height, introDistance, mobile, texture, graphData]);
 
   const initialize = useCallback(() => {
     if (initialized.current || !graph.current) return;

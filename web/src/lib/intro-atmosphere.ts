@@ -1,4 +1,6 @@
-import { AdditiveBlending, BufferGeometry, Float32BufferAttribute, Group, LineBasicMaterial, LineSegments, Points, PointsMaterial, type Texture } from "three";
+import { AdditiveBlending, BufferGeometry, Color, Float32BufferAttribute, Group, LineBasicMaterial, LineSegments, Points, PointsMaterial, type PerspectiveCamera, type Texture } from "three";
+import { starPalettes } from "./palette";
+import type { ViewMode } from "./types";
 
 interface Framing {
   width: number;
@@ -6,16 +8,23 @@ interface Framing {
   distance: number;
   target: { x: number; y: number };
   mobile: boolean;
+  entered: boolean;
+  mode: ViewMode;
 }
 
-/** Decorative DNA and stars, separate from the evaluated-pair graph. */
+/** Persistent atmospheric stars and intro-only DNA; neither represents data. */
 export function createIntroAtmosphere(texture: Texture, framing: Framing) {
   const group = new Group();
   group.name = "Decorative DNA and distant stars";
-  const far = new Group(), near = new Group(), helix = new Group();
-  group.add(far, near, helix);
+  const sky = new Group(), helix = new Group();
+  group.add(sky, helix);
   const geometries: BufferGeometry[] = [];
-  const starMaterials: { material: PointsMaterial; opacity: number; layer: "far" | "near" }[] = [];
+  const starMaterials: { material: PointsMaterial; colorIndex: number }[] = [];
+  const layers: { group: Group; depth: number; movement: number }[] = [];
+  const colors = {
+    explorer: starPalettes.explorer.map((color) => new Color(color)),
+    scientist: starPalettes.scientist.map((color) => new Color(color)),
+  };
   const helixMaterials: (PointsMaterial | LineBasicMaterial)[] = [];
   let seed = 6719;
   const random = () => { seed = Math.imul(seed, 1664525) + 1013904223; return (seed >>> 0) / 4294967296; };
@@ -28,24 +37,32 @@ export function createIntroAtmosphere(texture: Texture, framing: Framing) {
     return value;
   };
 
-  for (const [layer, count, size, opacity] of [
-    ["far", framing.mobile ? 75 : 135, 14, 0.65],
-    ["near", framing.mobile ? 30 : 60, 21, 0.75],
+  for (const [name, count, depth, size, opacity, movement] of [
+    ["Distant stars", framing.mobile ? 250 : 500, 9000, 3, 0.62, 22],
+    ["Middle stars", framing.mobile ? 150 : 300, 6500, 4.4, 0.68, 48],
+    ["Nearby stars", framing.mobile ? 80 : 150, 4000, 6, 0.72, 80],
   ] as const) {
+    const layer = new Group();
+    layer.name = name;
+    layers.push({ group: layer, depth, movement });
+    sky.add(layer);
     const vertices = [[], [], []] as number[][];
+    const height = depth * Math.tan(Math.PI / 8);
+    // Overscan covers pointer travel at the screen edges, including portrait.
+    const margin = (movement + 24) * height * 2 / Math.max(1, framing.height);
     for (let index = 0; index < count; index++) {
-      const depth = layer === "far" ? 1400 + random() * 1000 : 350 + random() * 650;
-      const height = halfHeight(depth);
       vertices[index % 3].push(
-        framing.target.x + (random() * 2 - 1) * height * aspect * 1.15,
-        framing.target.y + (random() * 2 - 1) * height * 1.15,
+        (random() * 2 - 1) * (height * aspect + margin),
+        (random() * 2 - 1) * (height + margin),
         -depth,
       );
     }
-    ["#d5c59b", "#a8c6df", "#b4a0ce"].forEach((color, index) => {
-      const material = new PointsMaterial({ color, map: texture, size, sizeAttenuation: true, transparent: true, opacity, blending: AdditiveBlending, depthWrite: false });
-      starMaterials.push({ material, opacity, layer });
-      (layer === "far" ? far : near).add(new Points(geometry(vertices[index]), material));
+    starPalettes[framing.entered ? framing.mode : "explorer"].forEach((color, index) => {
+      const material = new PointsMaterial({ color, map: texture, size, sizeAttenuation: false, transparent: true, opacity, blending: AdditiveBlending, depthWrite: false });
+      starMaterials.push({ material, colorIndex: index });
+      const points = new Points(geometry(vertices[index]), material);
+      points.renderOrder = -100;
+      layer.add(points);
     });
   }
 
@@ -71,7 +88,7 @@ export function createIntroAtmosphere(texture: Texture, framing: Framing) {
   strands.forEach((vertices, index) => {
     const segments: number[] = [];
     for (let offset = 3; offset < vertices.length; offset += 3) segments.push(...vertices.slice(offset - 3, offset + 3));
-    const material = new LineBasicMaterial({ color: index ? "#b4a0ce" : "#a8c6df", transparent: true, opacity: 0.12, blending: AdditiveBlending, depthWrite: false });
+    const material = new LineBasicMaterial({ color: index ? starPalettes.explorer[2] : starPalettes.explorer[0], transparent: true, opacity: 0.12, blending: AdditiveBlending, depthWrite: false });
     helixMaterials.push(material);
     helix.add(new LineSegments(geometry(segments), material));
   });
@@ -83,23 +100,33 @@ export function createIntroAtmosphere(texture: Texture, framing: Framing) {
   group.traverse((object) => { object.raycast = () => {}; });
   const helixBase = helix.position.clone();
   const baseOpacities = helixMaterials.map((material) => material.opacity);
-  let x = 0, y = 0, presence = 1;
+  let x = 0, y = 0, presence = framing.entered ? 0 : 1;
+  helix.visible = !framing.entered;
   return {
     group,
-    update(pointer: { x: number; y: number }, entered: boolean, reducedMotion: boolean, delta: number) {
-      const ease = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 60) / 180);
-      x += ((entered || reducedMotion ? 0 : pointer.x) - x) * ease;
-      y += ((entered || reducedMotion ? 0 : pointer.y) - y) * ease;
+    update(pointer: { x: number; y: number }, entered: boolean, reducedMotion: boolean, delta: number, camera: PerspectiveCamera, mode: ViewMode) {
+      const ease = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 60) / 130);
+      x += ((reducedMotion ? 0 : pointer.x) - x) * ease;
+      y += ((reducedMotion ? 0 : pointer.y) - y) * ease;
       presence += ((entered ? 0 : 1) - presence) * (reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 60) / 240));
       const unitsPerPixel = (layerDepth: number) => halfHeight(layerDepth) * 2 / Math.max(1, framing.height);
-      far.position.set(x * 3 * unitsPerPixel(1900), -y * 3 * unitsPerPixel(1900), 0);
-      near.position.set(x * 8 * unitsPerPixel(675), -y * 8 * unitsPerPixel(675), 0);
+      // Follow camera orientation for full coverage through orbit/flight, while
+      // moving only the stars. Camera controls and gene positions stay independent.
+      sky.position.copy(camera.position);
+      sky.quaternion.copy(camera.quaternion);
+      const tangent = Math.tan(camera.fov * Math.PI / 360);
+      layers.forEach(({ group: layer, depth: layerDepth, movement }) => {
+        const pixelScale = layerDepth * tangent * 2 / Math.max(1, framing.height);
+        layer.position.set(x * movement * pixelScale, -y * movement * pixelScale, 0);
+      });
       helix.position.copy(helixBase);
-      helix.position.x += x * 5 * unitsPerPixel(depth);
-      helix.position.y -= y * 5 * unitsPerPixel(depth);
+      helix.position.x += x * 14 * unitsPerPixel(depth);
+      helix.position.y -= y * 14 * unitsPerPixel(depth);
       helix.rotation.y = x * 0.06;
       helix.rotation.x = y * 0.035;
-      starMaterials.forEach(({ material, opacity, layer }) => { material.opacity = opacity * (presence + (1 - presence) * (layer === "far" ? 0.24 : 0.1)); });
+      const starMode = entered ? mode : "explorer";
+      const colorEase = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 60) / 200);
+      starMaterials.forEach(({ material, colorIndex }) => { material.color.lerp(colors[starMode][colorIndex], colorEase); });
       helixMaterials.forEach((material, index) => { material.opacity = baseOpacities[index] * presence; });
       helix.visible = presence > 0.005;
     },

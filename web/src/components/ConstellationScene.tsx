@@ -35,9 +35,9 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredPair, setHoveredPair] = useState<string | null>(null);
   const [fontsReady, setFontsReady] = useState(false);
-  const atmosphereState = useRef({ entered, reducedMotion });
+  const atmosphereState = useRef({ entered, reducedMotion, mode });
   const palette = palettes[mode];
-  useEffect(() => { atmosphereState.current = { entered, reducedMotion }; }, [entered, reducedMotion]);
+  useEffect(() => { atmosphereState.current = { entered, reducedMotion, mode }; }, [entered, reducedMotion, mode]);
 
   useEffect(() => { let mounted = true; document.fonts.ready.then(() => { if (mounted) setFontsReady(true); }); return () => { mounted = false; }; }, []);
 
@@ -99,7 +99,9 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   useEffect(() => {
     if (!ready || !graph.current) return;
     const scene = graph.current.scene();
-    const atmosphere = createIntroAtmosphere(texture, { ...size, distance: introDistance, target: introTarget, mobile });
+    const initial = atmosphereState.current;
+    const atmosphere = createIntroAtmosphere(texture, { ...size, distance: introDistance, target: introTarget, mobile, entered: initial.entered, mode: initial.mode });
+    atmosphere.update({ x: 0, y: 0 }, initial.entered, initial.reducedMotion, 0, graph.current.camera() as PerspectiveCamera, initial.mode);
     scene.add(atmosphere.group);
     const pointer = { x: 0, y: 0 };
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -114,8 +116,8 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     window.addEventListener("blur", reset);
     let frame = 0, previous = performance.now();
     const animate = (now: number) => {
-      const { entered: hasEntered, reducedMotion: reduced } = atmosphereState.current;
-      atmosphere.update(pointer, hasEntered, reduced, now - previous);
+      const { entered: hasEntered, reducedMotion: reduced, mode: currentMode } = atmosphereState.current;
+      atmosphere.update(pointer, hasEntered, reduced, now - previous, graph.current!.camera() as PerspectiveCamera, currentMode);
       previous = now;
       frame = requestAnimationFrame(animate);
     };

@@ -130,7 +130,7 @@ export default function Dashboard() {
     {data && <SceneBoundary onFailure={() => { setSceneFailed(true); setSceneReady(true); }}><ConstellationScene data={data} mode={mode} entered={phase !== "intro"} interactive={phase === "explore"} contextOpen={view !== "explorer"} reducedMotion={reducedMotion} selectedGenes={selectedGenes} selectedPairId={selectedPair?.id ?? null} resetNonce={resetNonce} onReady={() => setSceneReady(true)} onGeneSelect={selectGene} onPairSelect={selectPair}/></SceneBoundary>}
     <div className="scene-grain" style={{ backgroundImage: `url("${assetPath("/grain.svg")}")` }} aria-hidden="true"/>
     {phase !== "explore" && !error && <section className="intro-hub" aria-label="Project introduction" inert={phase !== "intro"} aria-hidden={phase !== "intro"}>
-      <h2>CRISPR<br/><em>Constellation</em><span className="intro-punct" aria-hidden="true">·</span></h2>
+      <h2>CRISPR<br/><em>Constellation</em></h2>
       <p className="intro-description">Predicting how cells respond to gene activation<br className="intro-line-break"/> with machine learning.</p>
       <button ref={entryButton} className="intro-entry" aria-label="Enter constellation" disabled={!data || !sceneReady} onClick={() => setPhase("entering")}><span className="entry-reticle" aria-hidden="true"><i/><i/></span><span>{!data || !sceneReady ? "Preparing the scene" : "Enter constellation"}</span><kbd aria-hidden="true">Enter</kbd></button>
     </section>}

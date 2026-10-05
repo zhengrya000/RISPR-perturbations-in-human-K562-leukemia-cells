@@ -1,5 +1,11 @@
 import type { ViewMode } from "./types";
 
+// Atmospheric colors stay separate from the gold/purple evaluated-pair graph.
+export const starPalettes = {
+  explorer: ["#8ebcff", "#79d8c3", "#ef95ad"],
+  scientist: ["#76cfc9", "#739ee8", "#ed9e79"],
+} satisfies Record<ViewMode, [string, string, string]>;
+
 export const palettes = {
   explorer: {
     background: "#07090d", observed: "#ece7dc", additive: "#b69a71", gears: "#dbc58d", control: "#667183",

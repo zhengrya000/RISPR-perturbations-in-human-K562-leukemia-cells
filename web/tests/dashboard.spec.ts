@@ -17,9 +17,10 @@ test("intro hub enters the 3D scene; compact views retain measured data and mode
   await expect(page.getByRole("switch", { name: "Scientist mode" })).toHaveCount(0);
   await expect(page.locator("canvas")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: /CRISPR.*Constellation/ })).toBeVisible();
-  await expect(page.getByText("Machine learning × cellular biology", { exact: true })).toBeVisible();
+  await expect(page.getByText("Machine learning × cellular biology", { exact: true })).toHaveCount(0);
+  await expect(page.locator(".intro-description")).toHaveText("Predicting how cells respond to gene activation with machine learning.");
   await expect(page.locator(".intro-skills")).toHaveCount(0);
-  await expect(page.locator(".intro-index")).not.toContainText("06");
+  await expect(page.locator(".intro-index")).toHaveCount(0);
   await expect(page.getByText(/CRISPR Constellation.*Ryan Zheng/)).toBeVisible();
   await enter(page);
   await expect(page.getByRole("heading", { name: "Choose two genes." })).toBeVisible();
@@ -63,6 +64,40 @@ test("intro hub enters the 3D scene; compact views retain measured data and mode
   expect(errors).toEqual([]);
 });
 
+test("DNA cursor leaves entry clickable; keyboard re-entry preserves the selected scientific view", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("./");
+  const entry = page.getByRole("button", { name: "Enter constellation", exact: true });
+  await expect(entry).toBeEnabled();
+  const bounds = (await entry.boundingBox())!;
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await expect(page.locator(".dna-cursor")).toHaveAttribute("data-visible", "true");
+  await expect(page.locator(".dna-cursor")).toHaveAttribute("data-action", "true");
+  const unobstructed = await entry.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+  });
+  expect(unobstructed).toBe(true);
+  await enter(page);
+  await page.getByLabel("Select an evaluated gene pair").selectOption("IGDCC3+PRTG");
+  await page.getByRole("switch", { name: "Scientist mode" }).click();
+  // Orbit uses the actual canvas; decorative stars never intercept its input.
+  await page.mouse.move(450, 420);
+  await page.mouse.down();
+  await page.mouse.move(550, 455, { steps: 12 });
+  await page.mouse.up();
+  await expect(page.getByRole("heading", { name: "IGDCC3 and PRTG" })).toBeVisible();
+  await page.getByRole("button", { name: "← Intro", exact: true }).click();
+  await expect(entry).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('main[data-phase="explore"]')).toBeVisible();
+  await expect(page.getByRole("heading", { name: "IGDCC3 and PRTG" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
+  expect(errors).toEqual([]);
+});
+
 test("unsupported combinations remain honest and survive a shared-link reload", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
@@ -103,6 +138,20 @@ test("mobile and reduced-motion keep the scene in one viewport", async ({ page }
   await page.getByRole("button", { name: "← Explorer", exact: true }).click();
   await expect(page.getByRole("heading", { name: "CEBPA and CEBPB" })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
+});
+
+test("touch devices retain native input while entering the constellation", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
+  const page = await context.newPage();
+  await page.goto(process.env.DASHBOARD_TEST_URL || "http://127.0.0.1:3016");
+  const entry = page.getByRole("button", { name: "Enter constellation", exact: true });
+  await expect(entry).toBeEnabled();
+  await entry.tap();
+  await expect(page.locator('main[data-phase="explore"]')).toBeVisible();
+  await expect(page.locator(".dna-cursor")).toHaveAttribute("data-visible", "false");
+  await page.getByLabel("Select an evaluated gene pair").selectOption("IGDCC3+PRTG");
+  await expect(page.getByRole("heading", { name: "IGDCC3 and PRTG" })).toBeVisible();
+  await context.close();
 });
 
 test("failed data has a working retry before entry", async ({ page }) => {

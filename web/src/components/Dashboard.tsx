@@ -5,6 +5,7 @@ import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { Code2, RotateCcw } from "lucide-react";
 import ResultsPanel from "./ResultsPanel";
 import InfoHint from "./InfoHint";
+import DnaCursor from "./DnaCursor";
 import { Instructions, Methodology, PairResults } from "./ExperimentViews";
 import { Switch } from "./ui/switch";
 import { loadDashboardData } from "@/lib/data";
@@ -38,6 +39,8 @@ export default function Dashboard() {
   const [reducedMotion, setReducedMotion] = useState(true);
   const [resetNonce, setResetNonce] = useState(0);
   const pairSelector = useRef<HTMLSelectElement>(null);
+  const entryButton = useRef<HTMLButtonElement>(null);
+  const wasExploring = useRef(false);
   const thread = useRef<HTMLElement>(null);
   const lastViewTrigger = useRef<HTMLElement | null>(null);
 
@@ -73,6 +76,10 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer);
   }, [phase, reducedMotion]);
   useEffect(() => { if (phase === "explore") pairSelector.current?.focus({ preventScroll: true }); }, [phase]);
+  useEffect(() => {
+    if (phase === "explore") wasExploring.current = true;
+    if (phase === "intro" && wasExploring.current) entryButton.current?.focus({ preventScroll: true });
+  }, [phase]);
   useEffect(() => {
     const enter = (event: KeyboardEvent) => {
       if (phase === "intro" && data && sceneReady && event.key === "Enter" && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey) {
@@ -119,13 +126,13 @@ export default function Dashboard() {
 
   return <main className="observatory" data-phase={phase} data-view={view} data-mode={mode}>
     <h1 className="sr-only">CRISPR Perturbation Explorer</h1>
+    <DnaCursor/>
     {data && <SceneBoundary onFailure={() => { setSceneFailed(true); setSceneReady(true); }}><ConstellationScene data={data} mode={mode} entered={phase !== "intro"} interactive={phase === "explore"} contextOpen={view !== "explorer"} reducedMotion={reducedMotion} selectedGenes={selectedGenes} selectedPairId={selectedPair?.id ?? null} resetNonce={resetNonce} onReady={() => setSceneReady(true)} onGeneSelect={selectGene} onPairSelect={selectPair}/></SceneBoundary>}
     <div className="scene-grain" style={{ backgroundImage: `url("${assetPath("/grain.svg")}")` }} aria-hidden="true"/>
     {phase !== "explore" && !error && <section className="intro-hub" aria-label="Project introduction" inert={phase !== "intro"} aria-hidden={phase !== "intro"}>
-      <span className="intro-index">Machine learning × cellular biology</span>
       <h2>CRISPR<br/><em>Constellation</em><span className="intro-punct" aria-hidden="true">·</span></h2>
-      <p className="intro-description">Can machine learning predict how a cell responds<br className="intro-line-break"/> when two genes are activated together?</p>
-      <button className="intro-entry" aria-label="Enter constellation" disabled={!data || !sceneReady} onClick={() => setPhase("entering")}><span className="entry-reticle" aria-hidden="true"><i/><i/></span><span>{!data || !sceneReady ? "Preparing the scene" : "Enter constellation"}</span><kbd aria-hidden="true">Enter</kbd></button>
+      <p className="intro-description">Predicting how cells respond to gene activation<br className="intro-line-break"/> with machine learning.</p>
+      <button ref={entryButton} className="intro-entry" aria-label="Enter constellation" disabled={!data || !sceneReady} onClick={() => setPhase("entering")}><span className="entry-reticle" aria-hidden="true"><i/><i/></span><span>{!data || !sceneReady ? "Preparing the scene" : "Enter constellation"}</span><kbd aria-hidden="true">Enter</kbd></button>
     </section>}
     <span className="project-signature">CRISPR Constellation <span>·</span> Ryan Zheng</span>
     {!data && !error && <span role="status" className="sr-only">Loading the measured experiment</span>}

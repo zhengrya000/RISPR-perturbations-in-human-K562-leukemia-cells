@@ -47,7 +47,7 @@ export function constellationLayout(nodes: DashboardData["nodes"], pairs: PairRe
     const angle = ((index - 1) / Math.max(1, groups.length - 1)) * Math.PI * 2 + 0.15;
     const cx = index === 0 ? -15 : Math.cos(angle) * 240;
     const cy = index === 0 ? 15 : Math.sin(angle) * 175;
-    const cz = index === 0 ? 30 : (hash(group.join("+")) % 130) - 65;
+    const cz = index === 0 ? 65 : (hash(group.join("+")) % 420) - 210;
     const radius = group.length === 1 ? 0 : 30 + group.length * 7;
     const rotation = group.length === 2 ? Math.PI / 2 : hash(group[0]) / 4294967296 * Math.PI * 2;
     group.forEach((id, offset) => {
@@ -55,7 +55,10 @@ export function constellationLayout(nodes: DashboardData["nodes"], pairs: PairRe
       const dx = Math.cos(theta) * radius;
       const x = cx + dx;
       const y = cy + Math.sin(theta) * radius;
-      const z = cz + (hash(id) % 30) - 15;
+      // Tilt each component into depth, with small irregular offsets so orbiting
+      // reveals a spatial constellation rather than a stack of flat rings.
+      const tilt = hash(group[0]) / 4294967296 * Math.PI * 2;
+      const z = cz + Math.sin(theta + tilt) * radius * 0.85 + (hash(id) % 90) - 45;
       positions.set(id, { x, y, z, fx: x, fy: y, fz: z, labelSide: Math.abs(dx) < 5 ? (cx < 0 ? -1 : 1) : (dx < 0 ? -1 : 1) });
     });
   });

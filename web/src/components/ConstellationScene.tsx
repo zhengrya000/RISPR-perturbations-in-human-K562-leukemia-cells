@@ -8,6 +8,7 @@ import type { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { constellationLayout, type SceneNode } from "@/lib/constellation-layout";
 import type { DashboardData, PairResult, ViewMode } from "@/lib/types";
 import { palettes } from "@/lib/palette";
+import { createIntroAtmosphere } from "@/lib/intro-atmosphere";
 
 interface Props {
   data: DashboardData;
@@ -34,7 +35,9 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
   const [hovered, setHovered] = useState<string | null>(null);
   const [hoveredPair, setHoveredPair] = useState<string | null>(null);
   const [fontsReady, setFontsReady] = useState(false);
+  const atmosphereState = useRef({ entered, reducedMotion });
   const palette = palettes[mode];
+  useEffect(() => { atmosphereState.current = { entered, reducedMotion }; }, [entered, reducedMotion]);
 
   useEffect(() => { let mounted = true; document.fonts.ready.then(() => { if (mounted) setFontsReady(true); }); return () => { mounted = false; }; }, []);
 
@@ -63,7 +66,8 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     ? Math.max(160, size.height * (selectedGenes.length || contextOpen ? 0.57 : 0.79) - 265)
     : Math.max(250, size.height - 230);
   const projection = Math.min(usableWidth / 720, usableHeight / 550);
-  const distance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * projection) + 40);
+  const depthPadding = Math.max(...graphData.nodes.map((node) => Math.abs(node.z))) + 60;
+  const distance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * projection) + depthPadding);
   const pixelsPerUnit = Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * distance);
   const target = {
     x: mobile ? 0 : (size.width / 2 - (usableWidth / 2 + 36)) / pixelsPerUnit,
@@ -71,7 +75,7 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     z: 0,
   };
   const introProjection = Math.min(usableWidth / 720, (mobile ? Math.max(160, size.height * 0.79 - 265) : usableHeight) / 550);
-  const introDistance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introProjection) + 40) * (mobile ? 1.35 : 1.55);
+  const introDistance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introProjection) + depthPadding) * (mobile ? 1.35 : 1.55);
   const introPixelsPerUnit = Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * introDistance);
   const introTarget = {
     x: mobile ? 0 : (size.width / 2 - size.width * 0.61) / introPixelsPerUnit,
@@ -91,6 +95,40 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
     return new CanvasTexture(canvas);
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
+
+  useEffect(() => {
+    if (!ready || !graph.current) return;
+    const scene = graph.current.scene();
+    const atmosphere = createIntroAtmosphere(texture, { ...size, distance: introDistance, target: introTarget, mobile });
+    scene.add(atmosphere.group);
+    const pointer = { x: 0, y: 0 };
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const move = (event: PointerEvent) => {
+      if (!finePointer.matches || event.pointerType !== "mouse") return;
+      pointer.x = Math.max(-1, Math.min(1, event.clientX / Math.max(1, size.width) * 2 - 1));
+      pointer.y = Math.max(-1, Math.min(1, event.clientY / Math.max(1, size.height) * 2 - 1));
+    };
+    const reset = () => { pointer.x = pointer.y = 0; };
+    window.addEventListener("pointermove", move);
+    document.documentElement.addEventListener("pointerleave", reset);
+    window.addEventListener("blur", reset);
+    let frame = 0, previous = performance.now();
+    const animate = (now: number) => {
+      const { entered: hasEntered, reducedMotion: reduced } = atmosphereState.current;
+      atmosphere.update(pointer, hasEntered, reduced, now - previous);
+      previous = now;
+      frame = requestAnimationFrame(animate);
+    };
+    frame = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", move);
+      document.documentElement.removeEventListener("pointerleave", reset);
+      window.removeEventListener("blur", reset);
+      scene.remove(atmosphere.group);
+      atmosphere.dispose();
+    };
+  }, [ready, size.width, size.height, introDistance, introTarget.x, introTarget.y, mobile, texture]);
 
   const initialize = useCallback(() => {
     if (initialized.current || !graph.current) return;
@@ -170,12 +208,12 @@ export default function ConstellationScene({ data, mode, entered, interactive, c
       linkColor={(pair) => {
         if (entered && (pair.id === selectedPairId || pair.id === hoveredPair)) return `rgba(${palette.selectedEdge},1)`;
         const related = entered && selectedGenes.length === 1 && pair.genes.includes(selectedGenes[0]);
-        const alpha = related ? 0.86 : entered && selectedGenes.length === 1 ? 0.64 : 0.72;
+        const alpha = related ? 0.98 : entered && selectedGenes.length === 1 ? 0.7 : 0.9;
         const rgb = pair.improvement > 0 ? related ? palette.partnerGoodEdge : palette.goodEdge : related ? palette.partnerOtherEdge : palette.otherEdge;
         return `rgba(${rgb},${alpha})`;
       }}
-      linkOpacity={entered ? 0.5 : 0.25}
-      linkWidth={(pair) => !entered ? 0 : pair.id === selectedPairId || pair.id === hoveredPair ? 0.65 : selectedGenes.length === 1 && pair.genes.includes(selectedGenes[0]) ? 0.22 : 0.15}
+      linkOpacity={entered ? 0.82 : 0.58}
+      linkWidth={(pair) => !entered ? 0 : (pair.id === selectedPairId || pair.id === hoveredPair ? 1.5 : selectedGenes.length === 1 && pair.genes.includes(selectedGenes[0]) ? 1 : 0.75) / pixelsPerUnit}
       linkDirectionalParticles={0}
       onEngineStop={initialize}
       onNodeHover={(node) => setHovered(node ? String(node.id) : null)}

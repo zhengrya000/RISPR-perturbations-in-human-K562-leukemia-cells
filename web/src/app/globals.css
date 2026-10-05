@@ -21,7 +21,12 @@ button { background: none; border: 0; }
 .observatory[data-phase="intro"] .intro-hub { animation: hub-arrive .8s ease both; }
 @keyframes hub-arrive { from { opacity: 0; } to { opacity: 1; } }
 .observatory[data-phase="entering"] .intro-hub { opacity: 0; transform: translate(-50%, -50%) scale(1.08); pointer-events: none; }
-.intro-index { display: block; color: #7e899a; font-size: 12px; letter-spacing: .10em; margin-bottom: 27px; }
+.dna-cursor { position: fixed; top: 0; left: 0; z-index: 100; pointer-events: none; opacity: 0; color: #b5bdcc; will-change: transform; transition: opacity .15s; }
+.dna-cursor svg { display: block; transform: translate(-50%, -50%) rotate(-28deg); transition: color .2s, filter .2s; }
+.dna-cursor[data-visible="true"] { opacity: 1; }
+.dna-cursor[data-action="true"] { color: var(--accent); }
+.dna-cursor[data-action="true"] svg { filter: drop-shadow(0 0 4px #d8c79b33); }
+@media (hover: hover) and (pointer: fine) { .observatory[data-dna-cursor="true"], .observatory[data-dna-cursor="true"] * { cursor: none !important; } }
 .intro-hub h2 { position: relative; width: fit-content; margin: 0 auto; font-family: var(--font-display), serif; font-weight: 300; font-size: clamp(48px, 6.6vw, 88px); line-height: 1.03; letter-spacing: -.04em; color: #ddd8cc; font-weight: 300; }
 .intro-hub h2 em { font-weight: 300; font-style: normal; color: #b9c1ce; }
 .intro-punct { position: absolute; right: -.21em; top: .88em; font-style: normal; color: #cbbb93; }
@@ -175,7 +180,6 @@ button { background: none; border: 0; }
   .overall-result { text-align: left; font-size: 12px; }
   .view-title { font-size: 28px; }
   .intro-hub { top: 42%; }
-  .intro-index { font-size: 12px; max-width: 29ch; line-height: 1.8; margin: 0 auto 25px; }
   .intro-hub h2 { font-size: clamp(42px, 12vw, 65px); }
   .intro-description { font-size: 14px; margin-top: 24px; }
   .intro-line-break { display: none; }
@@ -195,7 +199,7 @@ button { background: none; border: 0; }
   .scene-tools .icon-control { padding-inline: 3px; }
   .fallback-note { left: 22px; top: 135px; font-size: 12px; }
 }
-@media (max-height: 650px) and (min-width: 760px) { .intro-hub { top: 43%; } .intro-hub h2 { font-size: 56px; } .intro-index { margin-bottom: 16px; } .intro-description { margin-top: 18px; } .intro-entry { margin-top: 13px; } }
+@media (max-height: 650px) and (min-width: 760px) { .intro-hub { top: 43%; } .intro-hub h2 { font-size: 56px; } .intro-description { margin-top: 18px; } .intro-entry { margin-top: 13px; } }
 .intro-entry kbd { font: inherit; font-size: 11px; color: #707f94; margin-left: 8px; }
 .observatory[data-mode="scientist"] { --accent: #c5a8ee; --gold: #c5a8ee; --surface-rgb: 10, 8, 16; color: #e7e0ef; }
 .observatory[data-mode="scientist"] .scene-switch[data-state="checked"] { background: #32253f !important; border-color: #a07ec666 !important; }

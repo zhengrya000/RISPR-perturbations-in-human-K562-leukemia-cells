@@ -1,0 +1,18 @@
+{
+  "dataset": "Norman 2019 (GEARS processed)",
+  "perturbation_method": "CRISPR activation",
+  "downloaded_cells": 91205,
+  "gears_eligible_cells": 89357,
+  "measured_genes": 5045,
+  "condition_labels": 277,
+  "excluded_condition_labels": [
+    "IER5L+ctrl",
+    "KIAA1804+ctrl",
+    "LYL1+IER5L",
+    "RHOXF2BB+SET",
+    "RHOXF2BB+ZBTB25",
+    "RHOXF2BB+ctrl",
+    "ctrl+IER5L"
+  ],
+  "model_trained": false
+}

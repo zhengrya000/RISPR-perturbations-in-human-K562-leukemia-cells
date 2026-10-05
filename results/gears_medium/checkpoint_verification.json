@@ -1,0 +1,29 @@
+{
+  "checkpoint_reload_passed": true,
+  "checked_conditions": [
+    "BCL2L11+TGFBR2",
+    "BPGM+SAMD1",
+    "ZC3HAV1+HOXC13"
+  ],
+  "saved_prediction_device": "mps",
+  "reload_device": "cpu",
+  "comparison": [
+    {
+      "condition": "BCL2L11+TGFBR2",
+      "max_absolute_difference": 2.384185791015625e-06,
+      "mean_absolute_difference": 4.817471577212018e-08
+    },
+    {
+      "condition": "BPGM+SAMD1",
+      "max_absolute_difference": 4.5299530029296875e-06,
+      "mean_absolute_difference": 7.220062059332122e-08
+    },
+    {
+      "condition": "ZC3HAV1+HOXC13",
+      "max_absolute_difference": 5.245208740234375e-06,
+      "mean_absolute_difference": 1.5771730943470175e-07
+    }
+  ],
+  "relative_tolerance": 0.0001,
+  "absolute_tolerance": 1e-05
+}

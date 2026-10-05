@@ -1,0 +1,77 @@
+{
+  "best_epoch": 12,
+  "epochs_completed": 17,
+  "best_validation_mse_de20": 0.13196575202180374,
+  "training_seconds": 1667.7728491669986,
+  "status": "complete",
+  "device": "cpu",
+  "split_sha256": "2fc1d94eefca44ca32dd825828f008bc9a84fdb21bbe059f8d8fd5479c932ee8",
+  "training_cell_cap": 32,
+  "training_cells": 7584,
+  "full_training_cells": 79170,
+  "hidden_size": 64,
+  "model": "installed GEARS_Model, unchanged architecture",
+  "training_objective": "GEARS quartic error and direction term",
+  "checkpoint_selection": "validation pair-macro top20 DE MSE only",
+  "inference": "mean of 32 repeated training-control-mean profiles per condition",
+  "coexpression_data": "sampled training single-gene and control cells only",
+  "ontology_data": "local GEARS reference; default reference gene set; Jaccard top20 + self",
+  "test_gene_pairs": 20,
+  "model_scores": [
+    {
+      "split": "test",
+      "model": "additive",
+      "pairs": 20,
+      "mse_de20": 0.06023374284497286,
+      "mse_all_genes": 0.001989394144002175
+    },
+    {
+      "split": "test",
+      "model": "control",
+      "pairs": 20,
+      "mse_de20": 0.5387829135326834,
+      "mse_all_genes": 0.008964439060988611
+    },
+    {
+      "split": "test",
+      "model": "gears_local",
+      "pairs": 20,
+      "mse_de20": 0.13913377188327214,
+      "mse_all_genes": 0.00866979078930254
+    },
+    {
+      "split": "val",
+      "model": "additive",
+      "pairs": 20,
+      "mse_de20": 0.034835075956111385,
+      "mse_all_genes": 0.0013778982277452049
+    },
+    {
+      "split": "val",
+      "model": "control",
+      "pairs": 20,
+      "mse_de20": 0.5215959602413992,
+      "mse_all_genes": 0.006625679909450975
+    },
+    {
+      "split": "val",
+      "model": "gears_local",
+      "pairs": 20,
+      "mse_de20": 0.13196575202180374,
+      "mse_all_genes": 0.006928984381131387
+    }
+  ],
+  "gears_beats_additive_pairs": 5,
+  "additive_minus_gears_mean": -0.07890002903829929,
+  "additive_minus_gears_bootstrap95": [
+    -0.14059370498697035,
+    -0.025961984889756106
+  ],
+  "packages": {
+    "torch": "2.14.1",
+    "torch_geometric": "2.8.0.post1",
+    "cell-gears": "0.1.2",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3"
+  }
+}

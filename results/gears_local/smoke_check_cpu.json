@@ -1,0 +1,7 @@
+{
+  "seconds_per_batch": 0.41778859732827794,
+  "estimated_seconds_per_epoch": 99.01589756680187,
+  "sampled_training_cells": 7584,
+  "device": "cpu",
+  "forward_backward_inference_passed": true
+}

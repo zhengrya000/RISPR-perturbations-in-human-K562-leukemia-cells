@@ -1,0 +1,10 @@
+{
+  "checkpoint_reload_passed": true,
+  "checked_conditions": [
+    "BCL2L11+TGFBR2",
+    "BPGM+SAMD1",
+    "ZC3HAV1+HOXC13"
+  ],
+  "relative_tolerance": 1e-05,
+  "absolute_tolerance": 1e-06
+}

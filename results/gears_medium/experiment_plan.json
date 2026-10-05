@@ -1,0 +1,27 @@
+{
+  "arguments": {
+    "epochs": 20,
+    "cell_cap": 128,
+    "batch_size": 64,
+    "hidden_size": 64,
+    "patience": 5,
+    "seed": 1,
+    "lr": 0.001,
+    "lr_step_size": 5,
+    "lr_gamma": 0.5,
+    "runtime_variant": "batch-corrected",
+    "loss_implementation": "vectorized",
+    "run_name": "gears_medium",
+    "device": "mps",
+    "output_dir": "results/gears_medium",
+    "verify_checkpoint": false,
+    "smoke_only": false
+  },
+  "split_sha256": "2fc1d94eefca44ca32dd825828f008bc9a84fdb21bbe059f8d8fd5479c932ee8",
+  "training_cells": 29766,
+  "source_hashes": {
+    "train_project06.py": "787e6097faaf644ff284a1851f910f235c5f69a67bb1b275a656eaa9c601af44",
+    "gears_runtime.py": "7f8f5584f0754b7719bd2376d0728555f810b9f1b36c80ed84f6a041df55065e"
+  },
+  "selection": "validation MSE only; no configuration search on test outcomes"
+}

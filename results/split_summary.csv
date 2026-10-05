@@ -1,0 +1,4 @@
+split,control_groups,single_genes,gene_pairs,original_condition_labels,cells
+train,1,102,88,237,79170
+val,0,0,20,20,5026
+test,0,0,20,20,5161

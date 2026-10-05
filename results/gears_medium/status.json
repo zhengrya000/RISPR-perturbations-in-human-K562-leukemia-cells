@@ -1,0 +1,7 @@
+{
+  "status": "complete",
+  "best_epoch": 2,
+  "epochs_completed": 7,
+  "best_validation_mse_de20": 0.15937379215103753,
+  "training_seconds": 405.9810871669906
+}

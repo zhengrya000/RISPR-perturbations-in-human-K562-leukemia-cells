@@ -1,0 +1,87 @@
+{
+  "best_epoch": 2,
+  "epochs_completed": 7,
+  "best_validation_mse_de20": 0.15937379215103753,
+  "training_seconds": 405.9810871669906,
+  "status": "complete",
+  "device": "mps",
+  "split_sha256": "2fc1d94eefca44ca32dd825828f008bc9a84fdb21bbe059f8d8fd5479c932ee8",
+  "training_cell_cap": 128,
+  "training_cells": 29766,
+  "full_training_cells": 79170,
+  "hidden_size": 64,
+  "model": "gears_medium",
+  "runtime_variant": "batch-corrected",
+  "loss_implementation": "vectorized",
+  "learning_rate": 0.001,
+  "lr_step_size": 5,
+  "lr_gamma": 0.5,
+  "training_source_hashes": {
+    "train_project06.py": "787e6097faaf644ff284a1851f910f235c5f69a67bb1b275a656eaa9c601af44",
+    "gears_runtime.py": "7f8f5584f0754b7719bd2376d0728555f810b9f1b36c80ed84f6a041df55065e"
+  },
+  "training_objective": "GEARS quartic error and direction term",
+  "checkpoint_selection": "validation pair-macro top20 DE MSE only",
+  "inference": "mean of 32 repeated training-control-mean profiles per condition",
+  "coexpression_data": "training single-gene and control cells only",
+  "ontology_data": "local GEARS reference; Jaccard >0.1, top21 per target, deterministic ties",
+  "test_status": "exploratory: this test set was previously inspected in the pilot",
+  "test_gene_pairs": 20,
+  "model_scores": [
+    {
+      "split": "test",
+      "model": "additive",
+      "pairs": 20,
+      "mse_de20": 0.06023374284497286,
+      "mse_all_genes": 0.001989394144002175
+    },
+    {
+      "split": "test",
+      "model": "control",
+      "pairs": 20,
+      "mse_de20": 0.5387829135326834,
+      "mse_all_genes": 0.008964439060988611
+    },
+    {
+      "split": "test",
+      "model": "gears_medium",
+      "pairs": 20,
+      "mse_de20": 0.16383318781736383,
+      "mse_all_genes": 0.00601488984278655
+    },
+    {
+      "split": "val",
+      "model": "additive",
+      "pairs": 20,
+      "mse_de20": 0.034835075956111385,
+      "mse_all_genes": 0.0013778982277452049
+    },
+    {
+      "split": "val",
+      "model": "control",
+      "pairs": 20,
+      "mse_de20": 0.5215959602413992,
+      "mse_all_genes": 0.006625679909450975
+    },
+    {
+      "split": "val",
+      "model": "gears_medium",
+      "pairs": 20,
+      "mse_de20": 0.15937379739831706,
+      "mse_all_genes": 0.004589541396723381
+    }
+  ],
+  "gears_beats_additive_pairs": 3,
+  "additive_minus_gears_mean": -0.10359944497239097,
+  "additive_minus_gears_bootstrap95": [
+    -0.1564189071904159,
+    -0.055545107463261315
+  ],
+  "packages": {
+    "torch": "2.14.1",
+    "torch_geometric": "2.8.0.post1",
+    "cell-gears": "0.1.2",
+    "numpy": "2.2.6",
+    "scipy": "1.15.3"
+  }
+}

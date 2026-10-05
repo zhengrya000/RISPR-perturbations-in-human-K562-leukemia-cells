@@ -1,0 +1,12 @@
+{
+  "seed": 1,
+  "split_sha256": "2fc1d94eefca44ca32dd825828f008bc9a84fdb21bbe059f8d8fd5479c932ee8",
+  "split_type": "custom: unseen gene pairs with both single-gene conditions in training",
+  "evaluation": "mean expression MSE, per-label top20 DE genes; average labels within pair, then average pairs",
+  "test_pairs": 20,
+  "test_control_mse_de20": 0.5387829135326834,
+  "test_additive_mse_de20": 0.06023374284497289,
+  "relative_reduction_vs_control_percent": 88.82040589408575,
+  "test_pairs_additive_beats_control": 20,
+  "gears_trained": false
+}

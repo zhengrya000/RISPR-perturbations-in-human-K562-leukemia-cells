@@ -1,0 +1,9 @@
+{
+  "seed": 1,
+  "cell_cap": 32,
+  "hidden_size": 64,
+  "batch_size": 32,
+  "epochs": 20,
+  "patience": 5,
+  "split_sha256": "2fc1d94eefca44ca32dd825828f008bc9a84fdb21bbe059f8d8fd5479c932ee8"
+}

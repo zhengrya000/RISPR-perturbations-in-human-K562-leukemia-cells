@@ -1,0 +1,26 @@
+# Recreate source inputs through prepare_project06.py; do not commit gigabytes.
+data/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.cache/
+.DS_Store
+*.log
+*.part
+*.tmp
+
+# Keep compact CSV/JSON results and plots; recreate or share binary run assets separately.
+results/**/*.pt
+results/**/*.pkl
+results/**/*.npz
+results/preparation_check/
+results/gears_full/
+results/*_smoke/
+results/cell_split_assignments.csv
+results/**/training_cells.csv
+
+# Scratch setup notebooks are preserved locally but are not portfolio artifacts.
+Untitled-*.ipynb
+project06packageinstall.ipynb

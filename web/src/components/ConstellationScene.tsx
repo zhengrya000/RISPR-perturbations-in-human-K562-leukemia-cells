@@ -12,6 +12,7 @@ interface Props {
   data: DashboardData;
   entered: boolean;
   interactive: boolean;
+  contextOpen: boolean;
   reducedMotion: boolean;
   selectedGenes: string[];
   selectedPairId: string | null;
@@ -21,7 +22,7 @@ interface Props {
   onPairSelect: (id: string) => void;
 }
 
-export default function ConstellationScene({ data, entered, interactive, reducedMotion, selectedGenes, selectedPairId, resetNonce, onReady, onGeneSelect, onPairSelect }: Props) {
+export default function ConstellationScene({ data, entered, interactive, contextOpen, reducedMotion, selectedGenes, selectedPairId, resetNonce, onReady, onGeneSelect, onPairSelect }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const graph = useRef<ForceGraphMethods<SceneNode, PairResult> | undefined>(undefined);
   const initialized = useRef(false);
@@ -53,7 +54,7 @@ export default function ConstellationScene({ data, entered, interactive, reduced
   const mobile = size.width < 760;
   const usableWidth = mobile ? Math.max(180, size.width - 70) : Math.max(300, size.width - 430);
   const usableHeight = mobile
-    ? Math.max(160, size.height * (selectedGenes.length ? 0.57 : 0.79) - 265)
+    ? Math.max(160, size.height * (selectedGenes.length || contextOpen ? 0.57 : 0.79) - 265)
     : Math.max(250, size.height - 230);
   const projection = Math.min(usableWidth / 720, usableHeight / 550);
   const distance = Math.max(700, Math.max(1, size.height) / (2 * Math.tan(Math.PI / 8) * projection) + 40);
@@ -106,7 +107,7 @@ export default function ConstellationScene({ data, entered, interactive, reduced
     graph.current.cameraPosition(
       entered ? { x: target.x, y: target.y, z: distance } : { x: 0, y: 0, z: introDistance },
       entered ? target : { x: 0, y: 0, z: 0 },
-      reducedMotion ? 0 : travel ? 1600 : entered ? 650 : 0,
+      reducedMotion ? 0 : travel ? 1600 : entered ? 650 : arrived.current ? 1100 : 0,
     );
     arrived.current = entered;
   }, [entered, ready, reducedMotion, size.width, size.height, distance, resetNonce]); // Mobile framing reserves room for the continuous results area.
@@ -120,12 +121,12 @@ export default function ConstellationScene({ data, entered, interactive, reduced
     const group = new Group();
     const radius = (mobile ? 5 : 2.5) * (focused ? 1.4 : 1);
     group.add(new Mesh(new SphereGeometry(radius, 12, 8), new MeshBasicMaterial({ color, transparent: true, opacity: entered ? (dimmed ? 0.28 : 0.95) : 0.32 })));
-    const glow = new Sprite(new SpriteMaterial({ map: texture, color, transparent: true, opacity: focused ? 0.65 : entered ? 0.14 : 0.04, blending: AdditiveBlending, depthWrite: false }));
+    const glow = new Sprite(new SpriteMaterial({ map: texture, color, transparent: true, opacity: focused ? 0.65 : entered ? related ? 0.20 : 0.14 : 0.04, blending: AdditiveBlending, depthWrite: false }));
     glow.scale.setScalar(radius * (focused ? 10 : 7));
     group.add(glow);
     if (entered && (!mobile || focused || related)) {
       const label = new SpriteText(node.label);
-      label.color = focused ? "#f0e7cd" : dimmed ? "#48515e" : "#8b96a7";
+      label.color = focused ? "#f0e7cd" : related ? "#c3bfae" : dimmed ? "#48515e" : "#8b96a7";
       label.fontFace = "Menlo, Consolas, monospace";
       label.fontSize = 60;
       label.textHeight = (focused ? 14 : 12) * 2 * distance * Math.tan(Math.PI / 8) / Math.max(1, size.height);
@@ -154,9 +155,15 @@ export default function ConstellationScene({ data, entered, interactive, reduced
       nodeThreeObject={nodeObject}
       nodeLabel={() => ""}
       linkLabel={() => ""}
-      linkColor={(pair) => pair.id === selectedPairId || pair.id === hoveredPair ? "#d6c69a" : pair.improvement > 0 ? "#7f97b3" : "#af9881"}
-      linkOpacity={entered ? 0.36 : 0.025}
-      linkWidth={(pair) => pair.id === selectedPairId || pair.id === hoveredPair ? 0.65 : 0.15}
+      linkColor={(pair) => {
+        if (pair.id === selectedPairId || pair.id === hoveredPair) return "rgba(214,198,154,1)";
+        const related = selectedGenes.length === 1 && pair.genes.includes(selectedGenes[0]);
+        const alpha = related ? 0.86 : selectedGenes.length === 1 ? 0.64 : 0.72;
+        const rgb = pair.improvement > 0 ? related ? "148,166,190" : "127,151,179" : related ? "191,171,148" : "175,152,129";
+        return `rgba(${rgb},${alpha})`;
+      }}
+      linkOpacity={entered ? 0.5 : 0.025}
+      linkWidth={(pair) => pair.id === selectedPairId || pair.id === hoveredPair ? 0.65 : selectedGenes.length === 1 && pair.genes.includes(selectedGenes[0]) ? 0.22 : 0.15}
       linkDirectionalParticles={0}
       onEngineStop={initialize}
       onNodeHover={(node) => setHovered(node ? String(node.id) : null)}

@@ -4,7 +4,7 @@ A static Next.js dashboard for the completed Norman 2019 CRISPR-activation exper
 
 The frontend uses Next.js, React, TypeScript, Tailwind CSS, Recharts, `react-force-graph-3d`, Three.js, and accessible Radix controls. Experiment preparation and training remain in the parent project; see the [project README](../README.md) and [training audit](../AUDIT.md).
 
-The opening contains no visible copy or metrics. Click the central reticle (or anywhere on the opening screen) to travel along the actual 3D camera’s z axis into one full-screen constellation. Results form a continuous overlay; the complete pair list, gene chooser, and methodology open in native modal drawers.
+The opening introduces the topic with a compact typographic hub and a short skills line. Click Enter constellation to travel along the actual 3D camera’s z axis into one full-screen constellation. Results, evaluated pairs, genes, instructions, and methods share one narrow, unframed area with smooth transitions; the graph remains interactive.
 
 ## Run locally
 
@@ -110,12 +110,12 @@ Each pair has a canonical sorted `id` such as `ETS2+MAPK1`, `genes: [geneA, gene
 
 **Feature values are uncentered processed condition means.** The UI subtracts each feature's control value for plotting. Supplying already-centered values would subtract control twice. For each pair, MSE is the average squared prediction-minus-observed difference across its 20 features; `improvement = additiveMse − gearsMse`, so a positive value favors GEARS. Summary MSE averages pairs and `wins` counts positive improvements.
 
-Use finite numeric values, real gene identifiers, consistent gene order, and matching provenance. The current exporter is intentionally tied to `gears_medium` and rejects pairs with multiple original labels unless an explicit alias policy is added. To present another run, adapt the exporter and provenance together, preserve version-1 semantics, then verify the regenerated files. Review the featured-pair links and Norman/K562 explanations in `Dashboard.tsx` when changing study or dataset. A compatible JSON shape alone does not validate scientific claims in the surrounding copy.
+Use finite numeric values, real gene identifiers, consistent gene order, and matching provenance. The current exporter is intentionally tied to `gears_medium` and rejects pairs with multiple original labels unless an explicit alias policy is added. To present another run, adapt the exporter and provenance together, preserve version-1 semantics, then verify the regenerated files. Review the featured-pair links and Norman/K562 explanations in `Dashboard.tsx`, `ExperimentViews.tsx`, and `ResultsPanel.tsx` when changing study or dataset. A compatible JSON shape alone does not validate scientific claims in the surrounding copy.
 
 ## Accessibility and browser checks
 
 - Explorer and Scientist modes retain the selected pair and share the same underlying values.
-- Use **Tab** to reach the entry control, saved-pair selector, mode switch, view controls, gene chooser, results links, and gene-table disclosure; use **Enter/Space** on buttons. Native select controls support keyboard navigation. Drawers trap focus and close with **Escape**, returning focus to the trigger.
+- Use **Tab** to reach the entry control, saved-pair selector, mode switch, view controls, gene chooser, results links, and gene-table disclosure; use **Enter/Space** on buttons. Native select controls support keyboard navigation. Context views keep the graph available. **Escape** or **Back to Explorer** restores results and focus to the trigger; selected genes and mode are preserved.
 - Open **Choose genes** for visible keyboard-accessible gene buttons, providing an alternative to the canvas. Select a saved pair directly through the dropdown or results table.
 - Chart line patterns, labels, and the expandable 20-gene table complement colors. Errors and scope are also available as text.
 - System **reduced motion** makes camera entry immediate and suppresses decorative transitions. Expression/error charts have no animated data interpolation.
@@ -127,4 +127,6 @@ The Playwright configuration uses installed **Google Chrome** (`channel: "chrome
 DASHBOARD_TEST_URL=http://127.0.0.1:3016 npm run test:e2e
 ```
 
-If using the preview server's default port instead, set `DASHBOARD_TEST_URL=http://127.0.0.1:3017`. Install Google Chrome if it is unavailable. Tests cover the quiet intro, camera-entry state, selection/mode consistency, gene-table contents, modal drawers, unsupported shared links, mobile/reduced-motion layout, and failed-load recovery. They currently expect the saved medium experiment; update these scientific expectations deliberately when changing data. For a repository-subpath build, mount the preview at the matching prefix and include that trailing-slash path in `DASHBOARD_TEST_URL`; relative test navigation preserves it.
+If using the preview server's default port instead, set `DASHBOARD_TEST_URL=http://127.0.0.1:3017`. Install Google Chrome if it is unavailable. Tests cover the intro hub, camera entry, selection/mode consistency, gene values, nonmodal navigation, contextual help, guided examples, unsupported shared links, mobile/reduced-motion layout, and failed-load recovery. They currently expect the saved medium experiment; update these scientific expectations deliberately when changing data. For a repository-subpath build, mount the preview at the matching prefix and include that trailing-slash path in `DASHBOARD_TEST_URL`; relative test navigation preserves it.
+
+The intro hub identifies the research topic and skills; a bottom-corner signature credits Ryan Zheng. Pairs, Methods, genes, and Instructions transition within the same narrow results area without a modal backdrop. Back to Explorer preserves selected genes and mode; Back to Intro returns to the camera opening. Hover, keyboard focus, or tap reveals compact metric definitions. Saved partner genes and their edges brighten slightly after one gene is selected. A faint tiled grain texture sits above the canvas.

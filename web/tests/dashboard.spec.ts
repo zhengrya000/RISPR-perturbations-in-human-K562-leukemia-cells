@@ -8,7 +8,7 @@ async function enter(page: Page) {
   await expect(page.getByLabel("Select an evaluated gene pair")).toBeVisible();
 }
 
-test("quiet intro enters the 3D scene; measured data and modes remain consistent", async ({ page }) => {
+test("intro hub enters the 3D scene; compact views retain measured data and modes", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("./");
@@ -16,6 +16,9 @@ test("quiet intro enters the 3D scene; measured data and modes remain consistent
   await expect(page.getByRole("navigation")).toHaveCount(0);
   await expect(page.getByRole("switch", { name: "Scientist mode" })).toHaveCount(0);
   await expect(page.locator("canvas")).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: /CRISPR.*Constellation/ })).toBeVisible();
+  await expect(page.getByText(/Graph neural networks/)).toBeVisible();
+  await expect(page.getByText(/CRISPR Constellation.*Ryan Zheng/)).toBeVisible();
   await enter(page);
   await expect(page.getByRole("heading", { name: "Choose two genes." })).toBeVisible();
   await page.getByLabel("Select an evaluated gene pair").selectOption("IGDCC3+PRTG");
@@ -33,17 +36,28 @@ test("quiet intro enters the 3D scene; measured data and modes remain consistent
   await page.getByRole("switch", { name: "Scientist mode" }).click();
   await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
   await page.getByRole("button", { name: "Pairs", exact: true }).click();
-  await expect(page.getByRole("dialog", { name: "All evaluated pairs" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "All evaluated pairs" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("navigation")).toBeVisible();
+  const panel = await page.getByRole("complementary").boundingBox();
+  expect(panel!.width).toBeLessThan(450);
   await page.getByLabel("Filter pair results").selectOption("gears");
   await expect(page.locator("#results tbody tr")).toHaveCount(3);
   await page.getByLabel("Search evaluated gene pairs").fill("not-a-real-gene");
   await expect(page.getByText("No saved pairs match your search.")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
   await page.getByRole("button", { name: "Methods", exact: true }).click();
-  await expect(page.getByText("The baseline led overall", { exact: true })).toBeVisible();
-  await expect(page.getByText(/GEARS learned from 29,766/)).toBeVisible();
-  await page.getByRole("button", { name: "Close drawer" }).click();
+  await expect(page.getByRole("heading", { name: "Additive led overall", exact: true })).toBeVisible();
+  await expect(page.getByText(/GEARS · 29,766 sampled outcome cells/)).toBeVisible();
+  await page.getByText("Evaluation & limits", { exact: true }).click();
+  await expect(page.getByText(/previously inspected test set/)).toBeVisible();
+  await page.getByRole("button", { name: "← Explorer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
+  await page.getByRole("button", { name: "← Intro", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Enter constellation", exact: true })).toBeEnabled();
+  await enter(page);
+  await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -74,6 +88,13 @@ test("mobile and reduced-motion keep the scene in one viewport", async ({ page }
   await expect(page.getByRole("heading", { name: "Prediction error", exact: true })).toBeVisible();
   const overflow = await page.evaluate(() => ({ x: document.documentElement.scrollWidth > window.innerWidth, y: document.documentElement.scrollHeight > window.innerHeight }));
   expect(overflow).toEqual({ x: false, y: false });
+  await page.getByRole("button", { name: "Methods", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "The experiment." })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("navigation")).toBeVisible();
+  await page.getByRole("button", { name: "← Explorer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "CEBPA and CEBPB" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
 });
 
 test("failed data has a working retry before entry", async ({ page }) => {
@@ -85,4 +106,28 @@ test("failed data has a working retry before entry", async ({ page }) => {
   await page.getByRole("button", { name: "Try again" }).click();
   await enter(page);
   await expect(page.getByRole("heading", { name: "Choose two genes." })).toBeVisible();
+});
+
+
+test("help, definitions and guided examples preserve the explorer state", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await enter(page);
+  await page.getByRole("button", { name: "GEARS closer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "IGDCC3 and PRTG" })).toBeVisible();
+  const mse = page.getByRole("button", { name: "MSE", exact: true });
+  await mse.focus();
+  await expect(page.getByRole("tooltip", { name: /MSE · mean squared prediction error/ })).toBeVisible();
+  await mse.press("Escape");
+  await expect(page.getByRole("tooltip", { name: /MSE · mean squared prediction error/ })).not.toBeVisible();
+  await page.getByRole("switch", { name: "Scientist mode" }).click();
+  await page.getByRole("button", { name: "Instructions", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Explore a response." })).toBeVisible();
+  await page.getByRole("button", { name: "← Explorer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "IGDCC3 and PRTG" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
+  await page.getByRole("button", { name: "Pairs", exact: true }).click();
+  await page.getByRole("button", { name: "Additive closer", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
 });

@@ -4,6 +4,22 @@ This project asks whether a graph neural network can predict a cell population's
 
 The biology comes from **Norman et al. (2019)**: CRISPR activation increases targeted gene activity in human K562 cells, and single-cell RNA sequencing measures the response. This is an expression-prediction project, rather than a gene-knockout experiment or a clinical prediction tool. [Original study](https://pmc.ncbi.nlm.nih.gov/articles/PMC6746554/)
 
+## Interactive dashboard
+
+[Open the live CRISPR Perturbation Explorer](https://crispr-perturbation-explorer.ryan-m-zheng07.chatgpt.site)
+
+Explore the 20 measured test pairs through an interactive constellation, switch between Explorer and Scientist explanations, compare observed expression with additive and GEARS predictions, and download the pair results. The constellation maps evaluated pairs; its layout has no biological meaning. Selecting an unsupported combination displays a no-result state.
+
+The Next.js frontend lives in [`web/`](web/README.md). It uses a compact, verified export of the completed 29,766-cell experiment. Viewing the dashboard requires no raw data, model checkpoint, or Python environment.
+
+```bash
+cd web
+npm ci
+npm run dev
+```
+
+Open the local address printed by Next.js. See the [frontend README](web/README.md) for static builds, browser checks, GitHub Pages subpath configuration, and replacing the data. From the repository root, `python3 export_dashboard_data.py --check` verifies the checked-in export against local source artifacts; it does not retrain the model.
+
 ## Results and experiment status
 
 The revised GEARS experiment trained on **29,766 cells**, capped at 128 per original condition label. Training completed in **6.8 minutes** on an Apple GPU. The additive baseline performed better on average than both this run and the earlier 7,584-cell pilot. The revised run incorporates the changes documented in [AUDIT.md](AUDIT.md).

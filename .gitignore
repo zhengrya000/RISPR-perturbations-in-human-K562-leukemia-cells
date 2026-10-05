@@ -1,5 +1,5 @@
 # Recreate source inputs through prepare_project06.py; do not commit gigabytes.
-data/
+/data/
 .venv/
 venv/
 __pycache__/
@@ -24,3 +24,13 @@ results/**/training_cells.csv
 # Scratch setup notebooks are preserved locally but are not portfolio artifacts.
 Untitled-*.ipynb
 project06packageinstall.ipynb
+
+# Dashboard dependencies, generated builds, and local deployment state.
+node_modules/
+web/.next/
+web/out/
+web/.sites-runtime/
+web/test-results/
+web/playwright-report/
+web/*.tsbuildinfo
+web/.env*

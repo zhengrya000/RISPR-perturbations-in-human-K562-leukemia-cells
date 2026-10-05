@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0a1218;
+  --foreground: #e9f1f4;
+  --muted: #99adb9;
+  --primary: #7bd6d0;
+  --border: #283842;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 30px; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { color: #081418; background: #7bd6d0; }
+button, a, input, select, summary { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+:focus-visible { outline: 2px solid #7bd6d0; outline-offset: 4px; }
+button, input, select { font: inherit; }
+.font-mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+.workspace-shell {
+  background-image: radial-gradient(ellipse at 40% 0%, rgba(38, 72, 76, .17), transparent 46%), radial-gradient(ellipse at 100% 40%, rgba(72, 56, 91, .11), transparent 35%);
+}
+.kicker { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+.display-title { font-weight: 450; letter-spacing: -.055em; line-height: 1.06; }
+.soft-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(164, 186, 198, .18) 10%, rgba(164, 186, 198, .18) 90%, transparent); }
+.dot-grid { background-image: radial-gradient(rgba(169, 189, 197, .14) .8px, transparent .8px); background-size: 24px 24px; }
+.specimen-ticket::before, .specimen-ticket::after { content: ""; position: absolute; top: 68px; height: 18px; width: 18px; border: 1px solid rgba(255,255,255,.1); background: #0a1218; border-radius: 50%; z-index: 1; pointer-events: none; }
+.specimen-ticket::before { left: -10px; }
+.specimen-ticket::after { right: -10px; }
+.stat-value { font-variant-numeric: tabular-nums; letter-spacing: -.035em; }
+.data-row { transition: background .15s; }
+.data-row:hover { background: rgba(123,214,208,.035); }
+.rise-in { animation: reveal .65s ease-out both; }
+@keyframes reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.status-dot { box-shadow: 0 0 0 4px rgba(123,214,208,.08); }
+.skip-link { position: fixed; z-index: 100; left: 16px; top: -80px; background: #d5f4ef; color: #0b171b; padding: 12px 18px; border-radius: 8px; }
+.skip-link:focus { top: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition-duration: 0s !important; }
+}
+@media (max-width: 640px) {
+  .specimen-ticket::before, .specimen-ticket::after { top: 63px; }
+}

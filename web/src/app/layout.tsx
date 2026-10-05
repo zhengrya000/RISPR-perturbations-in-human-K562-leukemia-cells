@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const displayFont = localFont({ src: "./fonts/noto-serif-jp-latin.woff2", weight: "300", style: "normal", variable: "--font-display", display: "swap" });
+const interfaceFont = localFont({ src: [{ path: "./fonts/space-mono-latin-400.woff2", weight: "400", style: "normal" }, { path: "./fonts/space-mono-latin-700.woff2", weight: "700", style: "normal" }], variable: "--font-ui", display: "swap" });
 
 export const metadata: Metadata = {
   title: "CRISPR Constellation · Ryan Zheng",
@@ -12,5 +16,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  return <html lang="en" className={`${displayFont.variable} ${interfaceFont.variable}`}><body>{children}</body></html>;
 }

@@ -8,7 +8,7 @@ The biology comes from **Norman et al. (2019)**: CRISPR activation increases tar
 
 [Open the live CRISPR Perturbation Explorer](https://crispr-perturbation-explorer.ryan-m-zheng07.chatgpt.site)
 
-Enter through a compact introduction and a 3D camera approach to a full-screen constellation. Pairs, methods, and instructions appear in the same unframed results area, with contextual definitions and navigation back to the explorer. Explore the 20 measured test pairs, switch between Explorer and Scientist explanations, compare observed expression with additive and GEARS predictions, and download the pair results. The constellation maps evaluated pairs; its layout has no biological meaning. Selecting an unsupported combination displays a no-result state.
+Enter through a short machine-learning introduction with the actual constellation visible at a distance; click Enter constellation or press Enter to approach it in 3D. Pairs, methods, and instructions appear in the same unframed results area, with contextual definitions and navigation back to the explorer. Explore the 20 measured test pairs, switch between warm yellow Explorer and purple Scientist modes, inspect residuals and the largest gene-level errors, compare observed expression with additive and GEARS predictions, and download the pair results. The constellation maps evaluated pairs; its layout has no biological meaning. Selecting an unsupported combination displays a no-result state.
 
 The Next.js frontend lives in [`web/`](web/README.md). It uses a compact, verified export of the completed 29,766-cell experiment. Viewing the dashboard requires no raw data, model checkpoint, or Python environment.
 

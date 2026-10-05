@@ -4,7 +4,7 @@ A static Next.js dashboard for the completed Norman 2019 CRISPR-activation exper
 
 The frontend uses Next.js, React, TypeScript, Tailwind CSS, Recharts, `react-force-graph-3d`, Three.js, and accessible Radix controls. Experiment preparation and training remain in the parent project; see the [project README](../README.md) and [training audit](../AUDIT.md).
 
-The opening introduces the topic with a compact typographic hub and a short skills line. Click Enter constellation to travel along the actual 3D camera’s z axis into one full-screen constellation. Results, evaluated pairs, genes, instructions, and methods share one narrow, unframed area with smooth transitions; the graph remains interactive.
+The opening introduces the topic with a compact typographic hub and a short machine-learning research question. Click Enter constellation to travel along the actual 3D camera’s z axis into one full-screen constellation. Results, evaluated pairs, genes, instructions, and methods share one narrow, unframed area with smooth transitions; the graph remains interactive.
 
 ## Run locally
 
@@ -115,7 +115,7 @@ Use finite numeric values, real gene identifiers, consistent gene order, and mat
 ## Accessibility and browser checks
 
 - Explorer and Scientist modes retain the selected pair and share the same underlying values.
-- Use **Tab** to reach the entry control, saved-pair selector, mode switch, view controls, gene chooser, results links, and gene-table disclosure; use **Enter/Space** on buttons. Native select controls support keyboard navigation. Context views keep the graph available. **Escape** or **Back to Explorer** restores results and focus to the trigger; selected genes and mode are preserved.
+- Use **Tab** to reach the entry control, saved-pair selector, mode switch, view controls, gene chooser, results links, and gene-table disclosure; use **Enter/Space** on buttons. Press **Enter** from the ready intro to begin the camera journey. Native select controls support keyboard navigation. Context views keep the graph available. **Escape** or **Back to Explorer** restores results and focus to the trigger; selected genes and mode are preserved.
 - Open **Choose genes** for visible keyboard-accessible gene buttons, providing an alternative to the canvas. Select a saved pair directly through the dropdown or results table.
 - Chart line patterns, labels, and the expandable 20-gene table complement colors. Errors and scope are also available as text.
 - System **reduced motion** makes camera entry immediate and suppresses decorative transitions. Expression/error charts have no animated data interpolation.
@@ -129,4 +129,13 @@ DASHBOARD_TEST_URL=http://127.0.0.1:3016 npm run test:e2e
 
 If using the preview server's default port instead, set `DASHBOARD_TEST_URL=http://127.0.0.1:3017`. Install Google Chrome if it is unavailable. Tests cover the intro hub, camera entry, selection/mode consistency, gene values, nonmodal navigation, contextual help, guided examples, unsupported shared links, mobile/reduced-motion layout, and failed-load recovery. They currently expect the saved medium experiment; update these scientific expectations deliberately when changing data. For a repository-subpath build, mount the preview at the matching prefix and include that trailing-slash path in `DASHBOARD_TEST_URL`; relative test navigation preserves it.
 
-The intro hub identifies the research topic and skills; a bottom-corner signature credits Ryan Zheng. Pairs, Methods, genes, and Instructions transition within the same narrow results area without a modal backdrop. Back to Explorer preserves selected genes and mode; Back to Intro returns to the camera opening. Hover, keyboard focus, or tap reveals compact metric definitions. Saved partner genes and their edges brighten slightly after one gene is selected. A faint tiled grain texture sits above the canvas.
+The intro hub identifies the research topic and a short machine-learning question; a bottom-corner signature credits Ryan Zheng. Pairs, Methods, genes, and Instructions transition within the same narrow results area without a modal backdrop. Back to Explorer preserves selected genes and mode; Back to Intro returns to the camera opening. Hover, keyboard focus, or tap reveals compact metric definitions. Saved partner genes and their edges brighten slightly after one gene is selected. A faint tiled grain texture sits above the canvas.
+
+
+## Typography and Scientist diagnostics
+
+Display headings use Noto Serif JP (300); interface text uses Space Mono (400/700), matching the typography at [elaineyu.design](https://www.elaineyu.design/). Latin WOFF2 files are hosted locally with `next/font/local`; the frontend makes no Google Fonts requests. The fonts are distributed under SIL OFL 1.1; license notices are included in `public/font-licenses/`.
+
+Font sources: [Noto Serif JP](https://fonts.gstatic.com/s/notoserifjp/v34/xn7mYHs72GKoTvER4Gn3b5eMbNmuYw.woff2), [Space Mono 400](https://fonts.gstatic.com/s/spacemono/v17/i7dPIFZifjKcF5UAWdDRYEF8RQ.woff2), [Space Mono 700](https://fonts.gstatic.com/s/spacemono/v17/i7dMIFZifjKcF5UAWdDRaPpZUFWaHg.woff2). Original license sources: [Noto Serif JP OFL](https://github.com/google/fonts/blob/main/ofl/notoserifjp/OFL.txt), [Space Mono OFL](https://github.com/google/fonts/blob/main/ofl/spacemono/OFL.txt).
+
+Scientist mode uses a purple palette and adds diagnostics derived from the saved condition means. Explorer retains warm yellow accents. RMSE is `sqrt(MSE)`; relative MSE reduction is `100 * (additiveMse - gearsMse) / additiveMse`. Negative reductions display as higher error, including values above 100%; a zero additive denominator is explicitly unavailable. Residuals are `prediction - observed`, with positive values indicating overprediction. The largest-errors table sorts the absolute GEARS residuals among that pair's 20 evaluation genes and shows additive residuals alongside them. These descriptive analyses do not measure uncertainty or biological interactions.

@@ -17,7 +17,9 @@ test("intro hub enters the 3D scene; compact views retain measured data and mode
   await expect(page.getByRole("switch", { name: "Scientist mode" })).toHaveCount(0);
   await expect(page.locator("canvas")).toHaveCount(1);
   await expect(page.getByRole("heading", { name: /CRISPR.*Constellation/ })).toBeVisible();
-  await expect(page.getByText(/Graph neural networks/)).toBeVisible();
+  await expect(page.getByText("Machine learning × cellular biology", { exact: true })).toBeVisible();
+  await expect(page.locator(".intro-skills")).toHaveCount(0);
+  await expect(page.locator(".intro-index")).not.toContainText("06");
   await expect(page.getByText(/CRISPR Constellation.*Ryan Zheng/)).toBeVisible();
   await enter(page);
   await expect(page.getByRole("heading", { name: "Choose two genes." })).toBeVisible();
@@ -86,6 +88,12 @@ test("mobile and reduced-motion keep the scene in one viewport", async ({ page }
   await expect(page.getByRole("button", { name: "Reset gene-pair graph view" })).toBeVisible();
   await page.getByRole("switch", { name: "Scientist mode" }).click();
   await expect(page.getByRole("heading", { name: "Prediction error", exact: true })).toBeVisible();
+  const thumbInsideTrack = await page.getByRole("switch", { name: "Scientist mode" }).evaluate((element) => {
+    const track = element.getBoundingClientRect();
+    const thumb = element.querySelector("span")!.getBoundingClientRect();
+    return thumb.left >= track.left && thumb.right <= track.right;
+  });
+  expect(thumbInsideTrack).toBe(true);
   const overflow = await page.evaluate(() => ({ x: document.documentElement.scrollWidth > window.innerWidth, y: document.documentElement.scrollHeight > window.innerHeight }));
   expect(overflow).toEqual({ x: false, y: false });
   await page.getByRole("button", { name: "Methods", exact: true }).click();
@@ -130,4 +138,34 @@ test("help, definitions and guided examples preserve the explorer state", async 
   await page.getByRole("button", { name: "Additive closer", exact: true }).click();
   await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Scientist mode" })).toBeChecked();
+});
+
+
+test("Enter starts the camera journey; Scientist diagnostics preserve signed measured errors", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await expect(page.getByRole("button", { name: "Enter constellation", exact: true })).toBeEnabled();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('main[data-phase="explore"]')).toBeVisible();
+  await page.getByLabel("Select an evaluated gene pair").selectOption("IGDCC3+PRTG");
+  await expect(page.locator("main")).toHaveAttribute("data-mode", "explorer");
+  await page.getByRole("switch", { name: "Scientist mode" }).click();
+  await expect(page.locator("main")).toHaveAttribute("data-mode", "scientist");
+  await expect(page.getByText("GEARS · 71.4% lower MSE vs. additive", { exact: true })).toBeVisible();
+  await expect(page.locator(".rmse-readout dd").nth(0)).toHaveText("0.4365");
+  await expect(page.locator(".rmse-readout dd").nth(1)).toHaveText("0.2336");
+  await page.getByRole("button", { name: "Residuals", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Prediction residuals", exact: true })).toBeVisible();
+  await expect(page.getByText(/Above zero · overprediction/)).toBeVisible();
+  const firstError = page.locator(".residual-table tbody tr").first();
+  await expect(page.locator(".residual-table tbody tr")).toHaveCount(3);
+  await expect(firstError.locator("th")).toHaveText("IGDCC3");
+  await expect(firstError.locator("td").nth(0)).toHaveText("-0.005");
+  await expect(firstError.locator("td").nth(1)).toHaveText("-0.891");
+  await page.getByLabel("Select an evaluated gene pair").selectOption("ETS2+MAPK1");
+  await expect(page.getByText("GEARS · 362.7% higher MSE vs. additive", { exact: true })).toBeVisible();
+  await page.getByRole("switch", { name: "Scientist mode" }).click();
+  await expect(page.locator("main")).toHaveAttribute("data-mode", "explorer");
+  await expect(page.getByRole("button", { name: "Residuals", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "ETS2 and MAPK1" })).toBeVisible();
 });

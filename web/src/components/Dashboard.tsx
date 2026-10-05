@@ -73,6 +73,15 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer);
   }, [phase, reducedMotion]);
   useEffect(() => { if (phase === "explore") pairSelector.current?.focus({ preventScroll: true }); }, [phase]);
+  useEffect(() => {
+    const enter = (event: KeyboardEvent) => {
+      if (phase === "intro" && data && sceneReady && event.key === "Enter" && !event.repeat && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault(); setPhase("entering");
+      }
+    };
+    window.addEventListener("keydown", enter);
+    return () => window.removeEventListener("keydown", enter);
+  }, [phase, data, sceneReady]);
 
   useEffect(() => {
     if (view === shownView) { setLeaving(false); return; }
@@ -108,23 +117,22 @@ export default function Dashboard() {
   };
   const selectPair = (id: string) => { const pair = data?.pairs.find((value) => value.id === id); if (pair) { setSelectedGenes(pair.genes); setView("explorer"); } };
 
-  return <main className="observatory" data-phase={phase} data-view={view}>
+  return <main className="observatory" data-phase={phase} data-view={view} data-mode={mode}>
     <h1 className="sr-only">CRISPR Perturbation Explorer</h1>
-    {data && <SceneBoundary onFailure={() => { setSceneFailed(true); setSceneReady(true); }}><ConstellationScene data={data} entered={phase !== "intro"} interactive={phase === "explore"} contextOpen={view !== "explorer"} reducedMotion={reducedMotion} selectedGenes={selectedGenes} selectedPairId={selectedPair?.id ?? null} resetNonce={resetNonce} onReady={() => setSceneReady(true)} onGeneSelect={selectGene} onPairSelect={selectPair}/></SceneBoundary>}
+    {data && <SceneBoundary onFailure={() => { setSceneFailed(true); setSceneReady(true); }}><ConstellationScene data={data} mode={mode} entered={phase !== "intro"} interactive={phase === "explore"} contextOpen={view !== "explorer"} reducedMotion={reducedMotion} selectedGenes={selectedGenes} selectedPairId={selectedPair?.id ?? null} resetNonce={resetNonce} onReady={() => setSceneReady(true)} onGeneSelect={selectGene} onPairSelect={selectPair}/></SceneBoundary>}
     <div className="scene-grain" style={{ backgroundImage: `url("${assetPath("/grain.svg")}")` }} aria-hidden="true"/>
     {phase !== "explore" && !error && <section className="intro-hub" aria-label="Project introduction" inert={phase !== "intro"} aria-hidden={phase !== "intro"}>
-      <span className="intro-index">A computational biology study / 06</span>
+      <span className="intro-index">Machine learning × cellular biology</span>
       <h2>CRISPR<br/><em>Constellation</em><span className="intro-punct" aria-hidden="true">·</span></h2>
-      <p className="intro-description">Predicting two-gene activation responses.</p>
-      <p className="intro-skills"><span>Graph neural networks</span><span>Single-cell RNA-seq</span><span>Bioinformatics</span></p>
-      <button className="intro-entry" aria-label="Enter constellation" disabled={!data || !sceneReady} onClick={() => setPhase("entering")}><span className="entry-reticle" aria-hidden="true"><i/><i/></span><span>{!data || !sceneReady ? "Preparing the scene" : "Enter constellation"}</span></button>
+      <p className="intro-description">Can machine learning predict how a cell responds<br className="intro-line-break"/> when two genes are activated together?</p>
+      <button className="intro-entry" aria-label="Enter constellation" disabled={!data || !sceneReady} onClick={() => setPhase("entering")}><span className="entry-reticle" aria-hidden="true"><i/><i/></span><span>{!data || !sceneReady ? "Preparing the scene" : "Enter constellation"}</span><kbd aria-hidden="true">Enter</kbd></button>
     </section>}
     <span className="project-signature">CRISPR Constellation <span>·</span> Ryan Zheng</span>
     {!data && !error && <span role="status" className="sr-only">Loading the measured experiment</span>}
     {error && <section role="alert" className="scene-error"><h2>The saved results couldn’t be loaded.</h2><p>{error}</p><button className="text-link" onClick={() => setRetry((value) => value + 1)}>Try again</button></section>}
     {data && <div className="scene-interface" inert={phase !== "explore"} aria-hidden={phase !== "explore"}>
       <header className="scene-header">
-        <a className="scene-wordmark" href="#" onClick={(event) => { event.preventDefault(); returnToIntro(); }}>CRISPR<span>/ 06</span></a>
+        <a className="scene-wordmark" href="#" onClick={(event) => { event.preventDefault(); returnToIntro(); }}>CRISPR<span>Constellation</span></a>
         <div className="scene-pair-picker"><select ref={pairSelector} aria-label="Select an evaluated gene pair" value={selectedPair?.id ?? ""} onChange={(event) => selectPair(event.target.value)}><option value="" disabled>Choose a saved pair</option>{data.pairs.map((pair) => <option key={pair.id} value={pair.id}>{pair.genes.join(" + ")}</option>)}</select></div>
         <nav aria-label="Experiment navigation"><button aria-pressed={view === "pairs"} onClick={() => openView("pairs")}>Pairs</button><button aria-pressed={view === "method"} onClick={() => openView("method")}>Methods</button><a href={repositoryUrl} aria-label="View project source" target="_blank" rel="noreferrer"><Code2 size={17}/></a></nav>
       </header>
@@ -139,7 +147,7 @@ export default function Dashboard() {
         </div>
       </aside>
       <div className="scene-tools"><button aria-pressed={view === "genes"} onClick={() => openView("genes")}>Choose genes</button><button className="icon-control" aria-label="Reset gene-pair graph view" onClick={() => setResetNonce((value) => value + 1)}><RotateCcw size={16}/></button><button className="instructions-link" aria-pressed={view === "instructions"} onClick={() => openView("instructions")}>Instructions</button><span className="navigation-hint">Drag to orbit · scroll to approach</span></div>
-      <footer className="scene-footer"><div><span>Norman 2019 · <InfoHint definition="K562 · human leukemia cell line used in this dataset.">K562</InfoHint> · <InfoHint definition="CRISPR activation · increases target-gene activity.">CRISPRa</InfoHint></span><span className="footer-detail">{data.run.trainingCells.toLocaleString()} sampled cells · decorative layout</span></div><button onClick={() => openView("method")} className="overall-result"><span>Additive <b>{data.summary.additiveMse.toFixed(4)}</b> / GEARS <b>{data.summary.gearsMse.toFixed(4)}</b></span><span className="footer-detail">Top-20 DE MSE · additive led · GEARS closer {data.summary.wins}/{data.summary.total}</span></button></footer>
+      <footer className="scene-footer"><div><span>Norman 2019 · <InfoHint definition="K562 · human leukemia cell line used in this dataset.">K562</InfoHint> · <InfoHint definition="CRISPR activation · increases target-gene activity.">CRISPRa</InfoHint></span><span className="footer-detail">{data.run.trainingCells.toLocaleString()} sampled cells · decorative layout</span></div><button onClick={() => openView("method")} className="overall-result"><span>Additive <b>{data.summary.additiveMse.toFixed(4)}</b> / GEARS <b>{data.summary.gearsMse.toFixed(4)}</b></span><span className="footer-detail">DE20 MSE · additive led · GEARS closer {data.summary.wins}/{data.summary.total}</span></button></footer>
       <button className="scene-back" onClick={() => view !== "explorer" ? setView("explorer") : returnToIntro()}>{view !== "explorer" ? "← Explorer" : "← Intro"}</button>
       {sceneFailed && <p className="fallback-note">The 3D view is unavailable. Use the saved-pair selector or Choose genes.</p>}
     </div>}

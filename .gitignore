@@ -27,6 +27,7 @@ project06packageinstall.ipynb
 
 # Dashboard dependencies, generated builds, and local deployment state.
 node_modules/
+.vercel/
 web/.next/
 web/out/
 web/.sites-runtime/

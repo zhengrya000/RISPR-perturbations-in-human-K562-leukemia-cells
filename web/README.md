@@ -22,11 +22,13 @@ Open the address printed by the development server, normally `http://127.0.0.1:3
 
 ```bash
 npm run typecheck
-npm run build
+npm run build -- --webpack
 npm run preview
 ```
 
 `next.config.ts` sets `output: "export"`. A successful build writes deployable HTML, JavaScript, CSS, and public data to `out/`. The preview command serves those static files at `http://127.0.0.1:3017` by default. Use `PORT=3016 npm run preview` to match the browser tests' default port. Next.js server mode (`next start`) is incompatible with this export configuration.
+
+For Vercel, import the GitHub repository with **Root Directory: `web`**. The committed `vercel.json` supplies the install and production build commands. See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete setup and [change notes](../CHANGELOG.md) for the implemented features.
 
 You can also serve a root-path build explicitly for local preview or browser tests:
 

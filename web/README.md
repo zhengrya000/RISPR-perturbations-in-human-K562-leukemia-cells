@@ -2,7 +2,9 @@
 
 A static Next.js dashboard for the completed Norman 2019 CRISPR-activation experiment. Visitors can explore 20 saved test pairs, compare measured expression with additive and GEARS predictions, and download the results. Selecting genes reads saved outputs; it does not run a model.
 
-The frontend uses Next.js, React, TypeScript, Tailwind CSS, Recharts, `react-force-graph-2d`, and accessible Radix controls. Experiment preparation and training remain in the parent project; see the [project README](../README.md) and [training audit](../AUDIT.md).
+The frontend uses Next.js, React, TypeScript, Tailwind CSS, Recharts, `react-force-graph-3d`, Three.js, and accessible Radix controls. Experiment preparation and training remain in the parent project; see the [project README](../README.md) and [training audit](../AUDIT.md).
+
+The opening contains no visible copy or metrics. Click the central reticle (or anywhere on the opening screen) to travel along the actual 3D camera’s z axis into one full-screen constellation. Results form a continuous overlay; the complete pair list, gene chooser, and methodology open in native modal drawers.
 
 ## Run locally
 
@@ -14,7 +16,7 @@ npm ci
 npm run dev
 ```
 
-Open the address printed by the development server, normally `http://127.0.0.1:3000`. The checked-in compact export is enough to run the dashboard; no Python environment, raw dataset, GPU, or model checkpoint is needed for viewing it.
+Open the address printed by the development server, normally `http://127.0.0.1:3000`. The checked-in compact export is enough to run the dashboard; no Python environment, raw dataset, or model checkpoint is needed for viewing it. The 3D view uses browser WebGL; if unavailable, saved-pair selection and results remain accessible.
 
 ## Build and preview
 
@@ -113,16 +115,16 @@ Use finite numeric values, real gene identifiers, consistent gene order, and mat
 ## Accessibility and browser checks
 
 - Explorer and Scientist modes retain the selected pair and share the same underlying values.
-- Use **Tab** to reach the saved-pair selector, mode switch, view controls, gene-selection buttons, results links, and gene-table disclosure; use **Enter/Space** on buttons. Native select controls support keyboard navigation.
+- Use **Tab** to reach the entry control, saved-pair selector, mode switch, view controls, gene chooser, results links, and gene-table disclosure; use **Enter/Space** on buttons. Native select controls support keyboard navigation. Drawers trap focus and close with **Escape**, returning focus to the trigger.
 - Open **Choose genes** for visible keyboard-accessible gene buttons, providing an alternative to the canvas. Select a saved pair directly through the dropdown or results table.
 - Chart line patterns, labels, and the expandable 20-gene table complement colors. Errors and scope are also available as text.
-- System **reduced motion** suppresses graph motion/smooth scrolling and decorative transitions. Expression/error charts have no animated data interpolation.
+- System **reduced motion** makes camera entry immediate and suppresses decorative transitions. Expression/error charts have no animated data interpolation.
 - Data-loading failures display a retry button; unsupported gene combinations have no fabricated prediction.
 
-The Playwright configuration uses installed **Google Chrome** (`channel: "chrome"`) and an existing server; it does not automatically start one. After a root-path build, start the static server above, then run in another terminal from `web/`:
+The Playwright configuration uses installed **Google Chrome** (`channel: "chrome"`) with software WebGL enabled for headless checks, and an existing server; it does not automatically start one. After a root-path build, start the static server above, then run in another terminal from `web/`:
 
 ```bash
 DASHBOARD_TEST_URL=http://127.0.0.1:3016 npm run test:e2e
 ```
 
-If using the preview server's default port instead, set `DASHBOARD_TEST_URL=http://127.0.0.1:3017`. Install Google Chrome if it is unavailable. Tests cover actual summary values, selection/mode consistency, gene-table contents, unsupported pairs, mobile/reduced-motion layout, and failed-load recovery. They currently expect the saved medium experiment; update these scientific expectations deliberately when changing data. For a repository-subpath build, mount the preview at the matching prefix and include that trailing-slash path in `DASHBOARD_TEST_URL`; relative test navigation preserves it.
+If using the preview server's default port instead, set `DASHBOARD_TEST_URL=http://127.0.0.1:3017`. Install Google Chrome if it is unavailable. Tests cover the quiet intro, camera-entry state, selection/mode consistency, gene-table contents, modal drawers, unsupported shared links, mobile/reduced-motion layout, and failed-load recovery. They currently expect the saved medium experiment; update these scientific expectations deliberately when changing data. For a repository-subpath build, mount the preview at the matching prefix and include that trailing-slash path in `DASHBOARD_TEST_URL`; relative test navigation preserves it.

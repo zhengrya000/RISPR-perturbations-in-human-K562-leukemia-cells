@@ -8,6 +8,7 @@ export default defineConfig({
     baseURL: process.env.DASHBOARD_TEST_URL || "http://127.0.0.1:3016",
     channel: "chrome",
     headless: true,
+    launchOptions: { args: ["--enable-unsafe-swiftshader"] },
     viewport: { width: 1440, height: 1000 },
     trace: "retain-on-failure",
   },
